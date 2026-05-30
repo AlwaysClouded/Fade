@@ -47,30 +47,43 @@ function startMusic() {
 window.addEventListener("click", startMusic);
 window.addEventListener("keydown", startMusic);
 
-// ——— DISCORD PROFILE PANEL ———
+// ——— LANYARD WEBSOCKET ———
 
 const DISCORD_ID = "1360925264669966338";
 
-async function loadDiscordProfile() {
-  const res = await fetch(
-    `https://api.lanyard.rest/v1/users/${DISCORD_ID}?t=${Date.now()}`,
-    { cache: "no-store" }
-  );
+const ws = new WebSocket("wss://api.lanyard.rest/socket");
 
-  const data = await res.json();
-  if (!data.success) return;
+ws.onopen = () => {
+  ws.send(JSON.stringify({
+    op: 2,
+    d: {
+      subscribe_to_id: DISCORD_ID
+    }
+  }));
+};
 
-  const d = data.data;
+ws.onmessage = (event) => {
+  const packet = JSON.parse(event.data);
 
+  if (packet.t !== "INIT_STATE" && packet.t !== "PRESENCE_UPDATE") return;
+
+  const d = packet.d;
+
+  updateDiscord(d);
+  updateSpotify(d);
+};
+
+// ——— DISCORD PANEL UPDATE ———
+
+function updateDiscord(d) {
   // Avatar
   const avatar = `https://cdn.discordapp.com/avatars/${DISCORD_ID}/${d.discord_user.avatar}.png?size=256`;
   document.getElementById("dp-avatar").src = avatar;
 
   // Username
-  document.getElementById("dp-username").textContent =
-    d.discord_user.username;
+  document.getElementById("dp-username").textContent = d.discord_user.username;
 
-  // Status dot + text
+  // Status
   const dot = document.getElementById("dp-status-dot");
   const text = document.getElementById("dp-status-text");
 
@@ -92,35 +105,20 @@ async function loadDiscordProfile() {
     custom ? custom.state : "No active custom status";
 }
 
-loadDiscordProfile();
-setInterval(loadDiscordProfile, 8000);
+// ——— SPOTIFY PANEL UPDATE ———
 
-// ——— SPOTIFY NOW PLAYING ———
-
-async function loadSpotify() {
-  const res = await fetch(
-    `https://api.lanyard.rest/v1/users/${DISCORD_ID}?t=${Date.now()}`,
-    { cache: "no-store" }
-  );
-
-  const data = await res.json();
-  if (!data.success) return;
-
-  const d = data.data;
-
-  console.log("Spotify data:", d.spotify); // DEBUG
-
+function updateSpotify(d) {
   const spotify = d.spotify;
+
   const bar = document.getElementById("spotify-bar");
   const cover = document.getElementById("spotify-cover");
   const title = document.getElementById("spotify-title");
   const artist = document.getElementById("spotify-artist");
 
-  // Always show the panel
   bar.style.opacity = 1;
 
   if (!spotify) {
-    cover.src = "https://i.imgur.com/8QfQFfC.png"; // neutral placeholder
+    cover.src = "https://i.imgur.com/8QfQFfC.png";
     title.textContent = "Not playing anything";
     artist.textContent = "";
     return;
@@ -130,6 +128,3 @@ async function loadSpotify() {
   title.textContent = spotify.song;
   artist.textContent = spotify.artist;
 }
-
-loadSpotify();
-setInterval(loadSpotify, 2000); // faster updates
