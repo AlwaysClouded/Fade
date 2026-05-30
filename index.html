@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Background layers -->
+  <!-- Background -->
   <div class="bg">
     <canvas id="bg-canvas"></canvas>
     <div class="bg-fog"></div>
@@ -26,13 +26,18 @@
       </button>
     </header>
 
-    <section class="card">
-      <div class="card-slash"></div>
-
-      <div class="card-left">
-        <div class="avatar-wrap">
-          <img id="dp-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Avatar" />
-          <div class="avatar-ring"></div>
+    <section class="hero">
+      <div class="hero-left">
+        <div class="avatar-orbit">
+          <div class="avatar-ring outer"></div>
+          <div class="avatar-ring inner"></div>
+          <div class="avatar-core">
+            <img
+              id="dp-avatar"
+              src="https://cdn.discordapp.com/embed/avatars/0.png"
+              alt="Avatar"
+            />
+          </div>
         </div>
 
         <h1 class="title-glitch" data-text="CHAINSAW PRESENCE">
@@ -44,7 +49,11 @@
         </p>
 
         <div class="links">
-          <a href="https://discord.com/users/1360925264669966338" target="_blank" class="btn-solid">
+          <a
+            href="https://discord.com/users/1360925264669966338"
+            target="_blank"
+            class="btn-solid"
+          >
             SUMMON ON DISCORD
           </a>
           <a href="https://github.com/" target="_blank" class="btn-ghost">
@@ -53,50 +62,60 @@
         </div>
       </div>
 
-      <div class="card-right">
-        <div class="panel panel-discord">
-          <div class="panel-header">
-            <span class="panel-label">DISCORD STATUS</span>
-            <span class="status-dot" id="dp-status-dot"></span>
-          </div>
+      <div class="hero-right">
+        <!-- Panels are separated, floating, hybrid control/slash style -->
+        <div class="panel-row">
+          <div class="panel panel-discord">
+            <div class="panel-orbit"></div>
+            <div class="panel-slash"></div>
 
-          <div class="panel-body">
-            <div class="discord-main">
-              <div class="discord-user">
-                <span id="dp-username" class="discord-name">Loading...</span>
-                <span id="dp-status-text" class="discord-status">Connecting</span>
+            <div class="panel-header">
+              <span class="panel-label">DISCORD STATUS</span>
+              <span class="status-dot" id="dp-status-dot"></span>
+            </div>
+
+            <div class="panel-body">
+              <div class="discord-main">
+                <div class="discord-user">
+                  <span id="dp-username" class="discord-name">Loading...</span>
+                  <span id="dp-status-text" class="discord-status">Connecting</span>
+                </div>
+                <p id="dp-custom-status" class="discord-custom">
+                  Waiting for Lanyard...
+                </p>
               </div>
-              <p id="dp-custom-status" class="discord-custom">
-                Waiting for Lanyard...
-              </p>
             </div>
           </div>
-        </div>
 
-        <div class="panel panel-spotify">
-          <div class="panel-header">
-            <span class="panel-label">SPOTIFY RITUAL</span>
-          </div>
+          <div class="panel panel-spotify">
+            <div class="panel-orbit"></div>
+            <div class="panel-slash"></div>
 
-          <div class="panel-body spotify-body">
-            <div class="spotify-cover-wrap">
-              <img
-                id="spotify-cover"
-                src="https://i.imgur.com/8QfQFfC.png"
-                alt="Spotify Cover"
-              />
-              <div class="spotify-glow"></div>
+            <div class="panel-header">
+              <span class="panel-label">SPOTIFY RITUAL</span>
             </div>
-            <div class="spotify-meta">
-              <div id="spotify-title" class="spotify-title">
-                Not playing anything
+
+            <div class="panel-body spotify-body">
+              <div class="spotify-cover-wrap">
+                <img
+                  id="spotify-cover"
+                  src="https://i.imgur.com/8QfQFfC.png"
+                  alt="Spotify Cover"
+                />
+                <div class="spotify-glow"></div>
               </div>
-              <div id="spotify-artist" class="spotify-artist"></div>
+              <div class="spotify-meta">
+                <div id="spotify-title" class="spotify-title">
+                  Not playing anything
+                </div>
+                <div id="spotify-artist" class="spotify-artist"></div>
+              </div>
             </div>
           </div>
         </div>
 
         <div class="panel panel-log">
+          <div class="panel-orbit subtle"></div>
           <div class="panel-header">
             <span class="panel-label">LIVE FEED</span>
           </div>
