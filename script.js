@@ -1,4 +1,4 @@
-// Particle effect
+// Particle effect (unchanged)
 const canvas = document.getElementById("particles");
 const ctx = canvas.getContext("2d");
 
@@ -32,7 +32,7 @@ function animate() {
 
 animate();
 
-// Background music unlock
+// Music unlock
 const bgm = document.getElementById("bgm");
 let started = false;
 
@@ -47,36 +47,47 @@ function startMusic() {
 window.addEventListener("click", startMusic);
 window.addEventListener("keydown", startMusic);
 
-// Discord Live Status Panel
+// ——— DISCORD PROFILE PANEL ———
+
 const DISCORD_ID = "1360925264669966338";
 
-async function loadDiscord() {
+async function loadDiscordProfile() {
   const res = await fetch(`https://api.lanyard.rest/v1/users/${DISCORD_ID}`);
   const data = await res.json();
-
   if (!data.success) return;
 
   const d = data.data;
 
   // Avatar
   const avatar = `https://cdn.discordapp.com/avatars/${DISCORD_ID}/${d.discord_user.avatar}.png?size=256`;
-  document.getElementById("discord-avatar").src = avatar;
+  document.getElementById("dp-avatar").src = avatar;
 
   // Username
-  document.getElementById("discord-username").textContent =
-    d.discord_user.username + "#" + d.discord_user.discriminator;
+  document.getElementById("dp-username").textContent =
+    d.discord_user.username;
 
-  // Status
+  // Status dot + text
+  const dot = document.getElementById("dp-status-dot");
+  const text = document.getElementById("dp-status-text");
+
   const statusMap = {
-    online: "🟢 Online",
-    idle: "🟡 Idle",
-    dnd: "🔴 Do Not Disturb",
-    offline: "⚫ Offline"
+    online: { color: "#43b581", text: "Online" },
+    idle: { color: "#faa61a", text: "Idle" },
+    dnd: { color: "#f04747", text: "Do Not Disturb" },
+    offline: { color: "#747f8d", text: "Offline" }
   };
 
-  document.getElementById("discord-status").textContent =
-    statusMap[d.discord_status] || "Unknown";
+  const s = statusMap[d.discord_status] || statusMap.offline;
+
+  dot.style.background = s.color;
+  dot.style.boxShadow = `0 0 10px ${s.color}`;
+  text.textContent = s.text;
+
+  // Custom status
+  const custom = d.activities.find(a => a.type === 4);
+  document.getElementById("dp-custom-status").textContent =
+    custom ? custom.state : "No custom status";
 }
 
-loadDiscord();
-setInterval(loadDiscord, 8000);
+loadDiscordProfile();
+setInterval(loadDiscordProfile, 8000);
