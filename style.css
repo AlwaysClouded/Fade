@@ -45,6 +45,107 @@ body {
   z-index: 2;
 }
 
+@keyframes cardFlicker {
+  0%, 100% { opacity: 1; }
+  45% { opacity: 0.97; }
+  46% { opacity: 0.85; }
+  47% { opacity: 1; }
+  70% { opacity: 0.95; }
+}
+
+/* Name + Glitch */
+.name {
+  font-size: 2.4rem;
+  color: #ff3c3c;
+  text-shadow:
+    0 0 10px #ff3c3c,
+    0 0 25px #ff1a1a,
+    0 0 40px rgba(255, 0, 0, 0.6);
+  font-weight: 800;
+  letter-spacing: 1px;
+
+  position: relative;
+  animation: glitch 1.8s infinite;
+}
+
+.name::before,
+.name::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  color: #ff3c3c;
+  opacity: 0.8;
+}
+
+.name::before {
+  left: 2px;
+  text-shadow: -2px 0 #ff1a1a;
+  animation: glitchTop 1.5s infinite;
+}
+
+.name::after {
+  left: -2px;
+  text-shadow: -2px 0 #ff5e5e;
+  animation: glitchBottom 1.5s infinite;
+}
+
+@keyframes glitch {
+  0% { transform: none; }
+  20% { transform: skew(0.5deg); }
+  40% { transform: translate(-1px, 1px); }
+  60% { transform: translate(1px, -1px); }
+  80% { transform: skew(-0.5deg); }
+  100% { transform: none; }
+}
+
+@keyframes glitchTop {
+  0% { clip-path: inset(0 0 80% 0); transform: translate(0); }
+  20% { clip-path: inset(0 0 60% 0); transform: translate(-2px, -2px); }
+  40% { clip-path: inset(0 0 70% 0); transform: translate(2px, 2px); }
+  60% { clip-path: inset(0 0 65% 0); transform: translate(-1px, 1px); }
+  100% { clip-path: inset(0 0 80% 0); transform: translate(0); }
+}
+
+@keyframes glitchBottom {
+  0% { clip-path: inset(80% 0 0 0); transform: translate(0); }
+  20% { clip-path: inset(60% 0 0 0); transform: translate(2px, 2px); }
+  40% { clip-path: inset(70% 0 0 0); transform: translate(-2px, -2px); }
+  60% { clip-path: inset(65% 0 0 0); transform: translate(1px, -1px); }
+  100% { clip-path: inset(80% 0 0 0); transform: translate(0); }
+}
+
+.title {
+  margin-top: 6px;
+  color: #f2f2f2;
+  font-size: 1rem;
+  opacity: 0.85;
+}
+
+.socials {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+}
+
+.socials a {
+  font-size: 2rem;
+  color: #ffffff;
+  transition: 0.2s;
+}
+
+.socials a:hover {
+  color: #ff3c3c;
+  text-shadow:
+    0 0 10px #ff3c3c,
+    0 0 25px #ff1a1a,
+    0 0 40px rgba(255, 0, 0, 0.6);
+  transform: scale(1.15);
+}
+
 /* ——— SPOTIFY NOW PLAYING BAR ——— */
 #spotify-bar {
   position: absolute;
@@ -68,7 +169,7 @@ body {
   gap: 12px;
   align-items: center;
 
-  opacity: 1; /* ALWAYS visible */
+  opacity: 1;
 }
 
 #spotify-cover {
