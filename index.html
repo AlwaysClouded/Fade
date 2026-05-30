@@ -2,38 +2,114 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>Atreyu | Chainsaw Presence</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AlwaysCloudedd</title>
   <link rel="stylesheet" href="style.css" />
-  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 </head>
-
 <body>
-
-  <canvas id="particles"></canvas>
-
-  <div class="card">
-    <h1 class="name" data-text="AlwaysCloudedd">AlwaysCloudedd</h1>
-    <p class="title">Developer • Creator • Clouded Mind</p>
-
-    <div class="socials">
-      <a href="https://github.com/AlwaysCloudedd" target="_blank"><i class='bx bxl-github'></i></a>
-      <a href="https://discord.com/users/1360925264669966338" target="_blank"><i class='bx bxl-discord-alt'></i></a>
-      <a href="https://instagram.com/YOUR-IG" target="_blank"><i class='bx bxl-instagram'></i></a>
-    </div>
-
-    <!-- Discord Live Panel -->
-    <div id="discord-panel">
-      <img id="discord-avatar" src="" alt="Avatar">
-      <div class="discord-info">
-        <h3 id="discord-username">Loading...</h3>
-        <p id="discord-status">Checking status...</p>
-      </div>
-    </div>
-
+  <!-- Background -->
+  <div class="bg">
+    <canvas id="bg-canvas"></canvas>
+    <div class="bg-fog"></div>
+    <div class="bg-embers"></div>
   </div>
 
-  <audio id="bgm" src="assets/sound.mp3"></audio>
+  <audio id="bg-audio" src="your-track.mp3" loop muted></audio>
+
+  <main class="shell">
+    <header class="top-bar">
+      <div class="logo-glitch" data-text="ATREYU">ATREYU</div>
+      <button id="music-unlock" class="btn-outline">UNMUTE BLOOD RUSH</button>
+    </header>
+
+    <section class="hero">
+      <div class="hero-left">
+        <div class="avatar-orbit">
+          <div class="avatar-ring outer"></div>
+          <div class="avatar-ring inner"></div>
+          <div class="avatar-core">
+            <img id="dp-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" />
+          </div>
+        </div>
+
+        <h1 class="title-glitch" data-text="CHAINSAW PRESENCE">CHAINSAW PRESENCE</h1>
+
+        <p class="tagline">
+          Frontend carnage, Discord presence, Spotify blood‑flow — all wired into one cursed page.
+        </p>
+
+        <div class="links">
+          <a href="https://discord.com/users/1360925264669966338" target="_blank" class="btn-solid">
+            SUMMON ON DISCORD
+          </a>
+          <a href="https://github.com/" target="_blank" class="btn-ghost">GITHUB DEN</a>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="panel-row">
+          <!-- Discord Panel -->
+          <div class="panel panel-discord">
+            <div class="panel-orbit"></div>
+            <div class="panel-slash"></div>
+
+            <div class="panel-header">
+              <span class="panel-label">DISCORD STATUS</span>
+              <span class="status-dot" id="dp-status-dot"></span>
+            </div>
+
+            <div class="panel-body">
+              <div class="discord-main">
+                <div class="discord-user">
+                  <span id="dp-username" class="discord-name">Loading...</span>
+                  <span id="dp-status-text" class="discord-status">Connecting</span>
+                </div>
+                <p id="dp-custom-status" class="discord-custom">Waiting for Lanyard...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Spotify Panel -->
+          <div class="panel panel-spotify">
+            <div class="panel-orbit"></div>
+            <div class="panel-slash"></div>
+
+            <div class="panel-header">
+              <span class="panel-label">SPOTIFY RITUAL</span>
+            </div>
+
+            <div class="panel-body spotify-body">
+              <div class="spotify-cover-wrap">
+                <img id="spotify-cover" src="https://i.imgur.com/8QfQFfC.png" />
+                <div class="spotify-glow"></div>
+              </div>
+              <div class="spotify-meta">
+                <div id="spotify-title" class="spotify-title">Not playing anything</div>
+                <div id="spotify-artist" class="spotify-artist"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Feed -->
+        <div class="panel panel-log">
+          <div class="panel-orbit subtle"></div>
+          <div class="panel-header">
+            <span class="panel-label">LIVE FEED</span>
+          </div>
+          <div class="panel-body log-body">
+            <div id="log-output" class="log-output">
+              <span class="log-line">[Lanyard] Waiting for connection...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>Chainsaw‑coded by Atreyu • Powered by Lanyard • 2026</span>
+    </footer>
+  </main>
 
   <script src="script.js"></script>
 </body>
