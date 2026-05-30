@@ -212,6 +212,55 @@ body {
   opacity: 0.9;
 }
 
+/* ——— SPOTIFY NOW PLAYING BAR ——— */
+
+#spotify-bar {
+  position: absolute;
+  bottom: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 340px;
+
+  padding: 14px;
+  border-radius: 14px;
+
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+
+  border: 2px solid rgba(30, 215, 96, 0.45);
+  box-shadow:
+    0 0 20px rgba(30, 215, 96, 0.5),
+    0 0 40px rgba(30, 215, 96, 0.3);
+
+  display: flex;
+  gap: 12px;
+  align-items: center;
+
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#spotify-cover {
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  border: 2px solid #1ed760;
+}
+
+.spotify-info h3 {
+  margin: 0;
+  color: #1ed760;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.spotify-info p {
+  margin: 0;
+  color: #e0e0e0;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
 /* Red scanline overlay */
 body::after {
   content: "";
