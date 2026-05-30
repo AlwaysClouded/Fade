@@ -27,7 +27,7 @@ body {
   filter: brightness(0.82) saturate(1.25);
 }
 
-/* GENERAL PANEL (THIS WAS OVERRIDING EVERYTHING) */
+/* GENERAL PANEL */
 .panel {
   position: relative;
   background: var(--panel);
@@ -59,28 +59,26 @@ body {
 
 .panel:hover .panel-slash { opacity: 0.45; }
 
-/* ⭐ DISCORD PANEL WITH POWER BACKGROUND — MUST COME AFTER .panel */
-.panel-discord {
-  background: url("11zon_resized.jpeg") center/cover no-repeat !important;
+/* DISCORD TEXT COLORS */
+.panel-discord .discord-name {
+  color: #ff2b2b !important;
+  font-weight: 700;
 }
 
-/* Make text readable */
-.panel-discord .discord-name,
-.panel-discord .discord-status,
+.panel-discord .discord-status {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
 .panel-discord .discord-custom {
-  color: white !important;
+  color: #ff2b2b !important;
+  font-style: italic;
 }
 
-/* ⭐ POWER PANEL — MUST COME AFTER .panel */
-.panel-power {
-  background: url("11zon_resized.jpeg") center/cover no-repeat !important;
-  height: 260px;
-  padding: 0 !important;
-}
-
+/* REMOVE POWER PANEL */
+.panel-power,
 .power-body {
-  width: 100%;
-  height: 100%;
+  display: none !important;
 }
 
 /* ANIMATIONS */
