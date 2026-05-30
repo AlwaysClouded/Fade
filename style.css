@@ -59,28 +59,28 @@ body {
 
 .panel:hover .panel-slash { opacity: 0.45; }
 
-/* ⭐ DISCORD PANEL WITH POWER BACKGROUND */
-.power-bg {
+/* ⭐ FORCE DISCORD PANEL TO USE POWER BACKGROUND */
+.panel-discord {
   background: url("11zon_resized.jpeg") center/cover no-repeat !important;
 }
 
-/* ⭐ POWER PANEL */
+/* Make text readable on Power background */
+.panel-discord .discord-name,
+.panel-discord .discord-status,
+.panel-discord .discord-custom {
+  color: white !important;
+}
+
+/* ⭐ POWER PANEL — FIXED ORDER + OVERRIDE */
 .panel-power {
-  background: url("11zon_resized.jpeg") center/cover no-repeat;
+  background: url("11zon_resized.jpeg") center/cover no-repeat !important;
   height: 260px;
-  padding: 0;
+  padding: 0 !important;
 }
 
 .power-body {
   width: 100%;
   height: 100%;
-}
-
-/* TEXT COLORS ON POWER BACKGROUND */
-.panel-discord .discord-name,
-.panel-discord .discord-status,
-.panel-discord .discord-custom {
-  color: white;
 }
 
 /* ANIMATIONS */
