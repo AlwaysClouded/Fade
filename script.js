@@ -15,7 +15,6 @@ function logLine(text) {
   span.className = "log-line";
   span.textContent = text;
   log.appendChild(span);
-  // keep last ~8 lines
   while (log.children.length > 8) {
     log.removeChild(log.firstChild);
   }
@@ -232,24 +231,24 @@ document.addEventListener("DOMContentLoaded", () => {
 })();
 
 // =========================
-// Parallax on mouse
+// Parallax on mouse (subtle)
 // =========================
 
 (function parallax() {
-  const card = document.querySelector(".card");
-  if (!card) return;
+  const hero = document.querySelector(".hero");
+  if (!hero) return;
 
   document.addEventListener("mousemove", (e) => {
-    const rect = card.getBoundingClientRect();
+    const rect = hero.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
     const dx = (e.clientX - cx) / rect.width;
     const dy = (e.clientY - cy) / rect.height;
 
-    card.style.transform = `translate3d(${dx * 10}px, ${dy * 10}px, 0)`;
+    hero.style.transform = `translate3d(${dx * 10}px, ${dy * 10}px, 0)`;
   });
 
   document.addEventListener("mouseleave", () => {
-    card.style.transform = "translate3d(0, 0, 0)";
+    hero.style.transform = "translate3d(0, 0, 0)";
   });
 })();
