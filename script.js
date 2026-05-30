@@ -52,7 +52,11 @@ window.addEventListener("keydown", startMusic);
 const DISCORD_ID = "1360925264669966338";
 
 async function loadDiscordProfile() {
-  const res = await fetch(`https://api.lanyard.rest/v1/users/${DISCORD_ID}`);
+  const res = await fetch(
+    `https://api.lanyard.rest/v1/users/${DISCORD_ID}?t=${Date.now()}`,
+    { cache: "no-store" }
+  );
+
   const data = await res.json();
   if (!data.success) return;
 
@@ -94,11 +98,17 @@ setInterval(loadDiscordProfile, 8000);
 // ——— SPOTIFY NOW PLAYING ———
 
 async function loadSpotify() {
-  const res = await fetch(`https://api.lanyard.rest/v1/users/${DISCORD_ID}`);
+  const res = await fetch(
+    `https://api.lanyard.rest/v1/users/${DISCORD_ID}?t=${Date.now()}`,
+    { cache: "no-store" }
+  );
+
   const data = await res.json();
   if (!data.success) return;
 
   const d = data.data;
+
+  console.log("Spotify data:", d.spotify); // DEBUG
 
   const spotify = d.spotify;
   const bar = document.getElementById("spotify-bar");
@@ -122,4 +132,4 @@ async function loadSpotify() {
 }
 
 loadSpotify();
-setInterval(loadSpotify, 5000);
+setInterval(loadSpotify, 2000); // faster updates
