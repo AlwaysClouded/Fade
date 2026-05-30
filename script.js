@@ -1,4 +1,4 @@
-// Particle effect (unchanged)
+// Particle effect
 const canvas = document.getElementById("particles");
 const ctx = canvas.getContext("2d");
 
@@ -32,7 +32,7 @@ function animate() {
 
 animate();
 
-// Music unlock
+// Background music unlock
 const bgm = document.getElementById("bgm");
 let started = false;
 
@@ -80,13 +80,12 @@ async function loadDiscordProfile() {
   const s = statusMap[d.discord_status] || statusMap.offline;
 
   dot.style.background = s.color;
-  dot.style.boxShadow = `0 0 10px ${s.color}`;
   text.textContent = s.text;
 
   // Custom status
   const custom = d.activities.find(a => a.type === 4);
   document.getElementById("dp-custom-status").textContent =
-    custom ? custom.state : "No custom status";
+    custom ? custom.state : "No active custom status";
 }
 
 loadDiscordProfile();
