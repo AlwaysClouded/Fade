@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Fade | AlwaysClouded</title>
+  <title>Atreyu | Chainsaw Presence</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Background -->
   <div class="bg">
     <canvas id="bg-canvas"></canvas>
     <div class="bg-fog"></div>
@@ -47,46 +46,40 @@
       </div>
 
       <div class="hero-right">
-        <div class="panel-row">
-          <!-- Discord Panel -->
-          <div class="panel panel-discord">
-            <div class="panel-orbit"></div>
-            <div class="panel-slash"></div>
+        <!-- Discord Panel -->
+        <div class="panel panel-discord">
+          <div class="panel-orbit"></div>
+          <div class="panel-slash"></div>
 
-            <div class="panel-header">
-              <span class="panel-label">DISCORD STATUS</span>
-              <span class="status-dot" id="dp-status-dot"></span>
-            </div>
-
-            <div class="panel-body">
-              <div class="discord-main">
-                <div class="discord-user">
-                  <span id="dp-username" class="discord-name">Loading...</span>
-                  <span id="dp-status-text" class="discord-status">Connecting</span>
-                </div>
-                <p id="dp-custom-status" class="discord-custom">Waiting for Lanyard...</p>
-              </div>
-            </div>
+          <div class="panel-header">
+            <span class="panel-label">DISCORD STATUS</span>
+            <span class="status-dot" id="dp-status-dot"></span>
           </div>
 
-          <!-- Spotify Panel -->
-          <div class="panel panel-spotify">
-            <div class="panel-orbit"></div>
-            <div class="panel-slash"></div>
+          <div class="panel-body">
+            <span id="dp-username" class="discord-name">Loading...</span>
+            <span id="dp-status-text" class="discord-status">Connecting</span>
+            <p id="dp-custom-status" class="discord-custom">Waiting for Lanyard...</p>
+          </div>
+        </div>
 
-            <div class="panel-header">
-              <span class="panel-label">SPOTIFY RITUAL</span>
+        <!-- Spotify Panel -->
+        <div class="panel panel-spotify">
+          <div class="panel-orbit"></div>
+          <div class="panel-slash"></div>
+
+          <div class="panel-header">
+            <span class="panel-label">SPOTIFY RITUAL</span>
+          </div>
+
+          <div class="panel-body spotify-body">
+            <div class="spotify-cover-wrap">
+              <img id="spotify-cover" src="https://i.imgur.com/8QfQFfC.png" />
+              <div class="spotify-glow"></div>
             </div>
-
-            <div class="panel-body spotify-body">
-              <div class="spotify-cover-wrap">
-                <img id="spotify-cover" src="https://i.imgur.com/8QfQFfC.png" />
-                <div class="spotify-glow"></div>
-              </div>
-              <div class="spotify-meta">
-                <div id="spotify-title" class="spotify-title">Not playing anything</div>
-                <div id="spotify-artist" class="spotify-artist"></div>
-              </div>
+            <div class="spotify-meta">
+              <div id="spotify-title" class="spotify-title">Not playing anything</div>
+              <div id="spotify-artist" class="spotify-artist"></div>
             </div>
           </div>
         </div>
@@ -103,6 +96,7 @@
             </div>
           </div>
         </div>
+
       </div>
     </section>
 
