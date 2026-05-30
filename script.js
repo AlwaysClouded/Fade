@@ -46,3 +46,37 @@ function startMusic() {
 
 window.addEventListener("click", startMusic);
 window.addEventListener("keydown", startMusic);
+
+// Discord Live Status Panel
+const DISCORD_ID = "1360925264669966338";
+
+async function loadDiscord() {
+  const res = await fetch(`https://api.lanyard.rest/v1/users/${DISCORD_ID}`);
+  const data = await res.json();
+
+  if (!data.success) return;
+
+  const d = data.data;
+
+  // Avatar
+  const avatar = `https://cdn.discordapp.com/avatars/${DISCORD_ID}/${d.discord_user.avatar}.png?size=256`;
+  document.getElementById("discord-avatar").src = avatar;
+
+  // Username
+  document.getElementById("discord-username").textContent =
+    d.discord_user.username + "#" + d.discord_user.discriminator;
+
+  // Status
+  const statusMap = {
+    online: "🟢 Online",
+    idle: "🟡 Idle",
+    dnd: "🔴 Do Not Disturb",
+    offline: "⚫ Offline"
+  };
+
+  document.getElementById("discord-status").textContent =
+    statusMap[d.discord_status] || "Unknown";
+}
+
+loadDiscord();
+setInterval(loadDiscord, 8000);
