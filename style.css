@@ -20,11 +20,12 @@ body {
 }
 
 /* BACKGROUND IMAGE — Makima Control Aura (Image 3A) */
+/* Cache‑busting version */
 .bg {
   position: fixed;
   inset: 0;
   z-index: 0;
-  background: url("https://i.imgur.com/6p0qk8d.jpeg") center/cover no-repeat;
+  background: url("https://i.imgur.com/6p0qk8d.jpeg?v=3") center/cover no-repeat;
   filter: brightness(0.82) saturate(1.35);
 }
 
@@ -95,6 +96,21 @@ body {
   display: grid;
   grid-template-columns: 1fr 1.2fr;
   gap: 28px;
+}
+
+/* HYBRID RESPONSIVE LAYOUT */
+/* Tablets + large phones keep desktop layout */
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Small phones stack panels */
+@media (max-width: 640px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* AVATAR */
@@ -173,6 +189,7 @@ body {
   padding: 12px;
   overflow: hidden;
   backdrop-filter: blur(4px);
+  margin-bottom: 16px;
 }
 
 .panel-orbit {
