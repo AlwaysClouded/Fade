@@ -90,3 +90,30 @@ async function loadDiscordProfile() {
 
 loadDiscordProfile();
 setInterval(loadDiscordProfile, 8000);
+
+// ——— SPOTIFY NOW PLAYING ———
+
+async function loadSpotify() {
+  const res = await fetch(`https://api.lanyard.rest/v1/users/${DISCORD_ID}`);
+  const data = await res.json();
+  if (!data.success) return;
+
+  const d = data.data;
+
+  const spotify = d.spotify;
+  const bar = document.getElementById("spotify-bar");
+
+  if (!spotify) {
+    bar.style.opacity = 0;
+    return;
+  }
+
+  bar.style.opacity = 1;
+
+  document.getElementById("spotify-cover").src = spotify.album_art_url;
+  document.getElementById("spotify-title").textContent = spotify.song;
+  document.getElementById("spotify-artist").textContent = spotify.artist;
+}
+
+loadSpotify();
+setInterval(loadSpotify, 5000);
