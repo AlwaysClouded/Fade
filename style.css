@@ -9,7 +9,6 @@
   --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
 }
 
-/* RESET */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -19,14 +18,13 @@ body {
   overflow-x: hidden;
 }
 
-/* BACKGROUND IMAGE — Makima Control Aura (Image 3A) */
-/* Cache‑busting version */
+/* BACKGROUND — Your Uploaded Chainsaw Man Collage */
 .bg {
   position: fixed;
   inset: 0;
   z-index: 0;
-  background: url("https://i.imgur.com/6p0qk8d.jpeg?v=3") center/cover no-repeat;
-  filter: brightness(0.82) saturate(1.35);
+  background: url("220c8083-b945-4b72-8d32-786de003d013.jpeg") center/cover no-repeat;
+  filter: brightness(0.82) saturate(1.25);
 }
 
 /* Fog + Embers */
@@ -68,52 +66,29 @@ body {
   align-items: center;
 }
 
-/* GLITCH LOGO */
-.logo-glitch {
-  font-size: 26px;
-  letter-spacing: 0.2em;
-  position: relative;
-  text-transform: uppercase;
-  cursor: default;
-}
-
-.logo-glitch::before,
-.logo-glitch::after {
-  content: attr(data-text);
-  position: absolute;
-  inset: 0;
-  opacity: 0.7;
-  mix-blend-mode: screen;
-}
-
-.logo-glitch::before { color: #ff2b2b; transform: translate(-2px, -1px); }
-.logo-glitch::after { color: #2b9dff; transform: translate(2px, 1px); }
-
-/* HERO */
+/* HERO GRID — Original Layout */
 .hero {
   margin: auto;
   max-width: 1120px;
   display: grid;
   grid-template-columns: 1fr 1.2fr;
-  gap: 28px;
+  gap: 32px;
 }
 
-/* HYBRID RESPONSIVE LAYOUT */
-/* Tablets + large phones keep desktop layout */
+/* Hybrid responsiveness */
 @media (max-width: 900px) {
   .hero {
     grid-template-columns: 1fr 1fr;
   }
 }
 
-/* Small phones stack panels */
 @media (max-width: 640px) {
   .hero {
     grid-template-columns: 1fr;
   }
 }
 
-/* AVATAR */
+/* AVATAR + TEXT */
 .avatar-orbit {
   position: relative;
   width: 120px;
@@ -142,7 +117,6 @@ body {
 .avatar-ring.outer { inset: 0; animation: spin 7s linear infinite; }
 .avatar-ring.inner { inset: 10px; animation: spin 5s linear infinite reverse; }
 
-/* TEXT */
 .title-glitch {
   margin-top: 12px;
   font-size: 28px;
@@ -180,16 +154,16 @@ body {
 .btn-ghost { border-color: rgba(255,255,255,0.2); }
 .btn-outline { border-color: var(--accent-soft); color: var(--accent); }
 
-/* PANELS */
+/* PANELS — Original Vertical Layout */
 .panel {
   position: relative;
   background: var(--panel);
   border-radius: 16px;
   border: 1px solid var(--border-soft);
-  padding: 12px;
+  padding: 14px;
   overflow: hidden;
   backdrop-filter: blur(4px);
-  margin-bottom: 16px;
+  margin-bottom: 22px; /* Medium‑tight spacing */
 }
 
 .panel-orbit {
