@@ -1,111 +1,234 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Fade | AlwaysClouded</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="bg">
-    <canvas id="bg-canvas"></canvas>
-    <div class="bg-fog"></div>
-    <div class="bg-embers"></div>
-  </div>
+:root {
+  --bg: #050509;
+  --accent: #ff2b2b;
+  --accent-soft: rgba(255, 43, 43, 0.4);
+  --text: #f5f5f5;
+  --muted: #8b8b96;
+  --panel: #101018;
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+}
 
-  <audio id="bg-audio" src="your-track.mp3" loop muted></audio>
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  <main class="shell">
-    <header class="top-bar">
-      <div class="logo-glitch" data-text="ATREYU">Clouded</div>
-      <button id="music-unlock" class="btn-outline">UNMUTE BLOOD RUSH</button>
-    </header>
+body {
+  background: #050509;
+  color: var(--text);
+  font-family: var(--font-main);
+  overflow-x: hidden;
+}
 
-    <section class="hero">
-      <div class="hero-left">
-        <div class="avatar-orbit">
-          <div class="avatar-ring outer"></div>
-          <div class="avatar-ring inner"></div>
-          <div class="avatar-core">
-            <img id="dp-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" />
-          </div>
-        </div>
+/* SITE BACKGROUND — Chainsaw Man collage */
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: url("220c8083-b945-4b72-8d32-786de003d013.jpeg") center/cover no-repeat;
+  filter: brightness(0.82) saturate(1.25);
+}
 
-        <h1 class="title-glitch" data-text="CHAINSAW PRESENCE">CHAINSAW PRESENCE</h1>
+/* Fog + Embers */
+.bg-fog {
+  position: absolute;
+  inset: -10%;
+  background:
+    radial-gradient(circle at 20% 0, rgba(255, 80, 80, 0.18), transparent 55%),
+    radial-gradient(circle at 80% 100%, rgba(255, 80, 80, 0.12), transparent 55%);
+  mix-blend-mode: screen;
+  opacity: 0.7;
+  animation: fog-move 40s linear infinite alternate;
+}
 
-        <p class="tagline">
-          Frontend carnage, Discord presence, Spotify blood‑flow — all wired into one cursed page.
-        </p>
+.bg-embers {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255, 80, 80, 0.7) 0, transparent 55%);
+  background-size: 4px 4px;
+  opacity: 0.12;
+  mix-blend-mode: screen;
+  animation: embers-flicker 2.4s ease-in-out infinite alternate;
+}
 
-        <div class="links">
-          <a href="https://discord.com/users/1360925264669966338" target="_blank" class="btn-solid">
-            SUMMON ON DISCORD
-          </a>
-          <a href="https://github.com/" target="_blank" class="btn-ghost">GITHUB DEN</a>
-        </div>
-      </div>
+/* LAYOUT */
+.shell {
+  position: relative;
+  z-index: 1;
+  padding: 24px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
 
-      <div class="hero-right">
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-        <!-- ⭐ DISCORD PANEL (Power background applied in CSS) -->
-        <div class="panel panel-discord">
-          <div class="panel-orbit"></div>
-          <div class="panel-slash"></div>
+/* HERO GRID */
+.hero {
+  margin: auto;
+  max-width: 1120px;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 32px;
+}
 
-          <div class="panel-header">
-            <span class="panel-label">DISCORD STATUS</span>
-            <span class="status-dot" id="dp-status-dot"></span>
-          </div>
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr 1fr;
+  }
+}
 
-          <div class="panel-body">
-            <span id="dp-username" class="discord-name">Loading...</span>
-            <span id="dp-status-text" class="discord-status">Connecting</span>
-            <p id="dp-custom-status" class="discord-custom">Waiting for Lanyard...</p>
-          </div>
-        </div>
+@media (max-width: 640px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+}
 
-        <!-- Spotify Panel -->
-        <div class="panel panel-spotify">
-          <div class="panel-orbit"></div>
-          <div class="panel-slash"></div>
+/* AVATAR + TEXT */
+.avatar-orbit {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
 
-          <div class="panel-header">
-            <span class="panel-label">SPOTIFY RITUAL</span>
-          </div>
+.avatar-core {
+  position: absolute;
+  inset: 18px;
+  border-radius: 50%;
+  overflow: hidden;
+}
 
-          <div class="panel-body spotify-body">
-            <div class="spotify-cover-wrap">
-              <img id="spotify-cover" src="https://i.imgur.com/8QfQFfC.png" />
-              <div class="spotify-glow"></div>
-            </div>
-            <div class="spotify-meta">
-              <div id="spotify-title" class="spotify-title">Not playing anything</div>
-              <div id="spotify-artist" class="spotify-artist"></div>
-            </div>
-          </div>
-        </div>
+.avatar-core img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
-        <!-- Live Feed -->
-        <div class="panel panel-log">
-          <div class="panel-orbit subtle"></div>
-          <div class="panel-header">
-            <span class="panel-label">LIVE FEED</span>
-          </div>
-          <div class="panel-body log-body">
-            <div id="log-output" class="log-output">
-              <span class="log-line">[Lanyard] Waiting for connection...</span>
-            </div>
-          </div>
-        </div>
+.avatar-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid var(--accent-soft);
+}
 
-      </div>
-    </section>
+.avatar-ring.outer { inset: 0; animation: spin 7s linear infinite; }
+.avatar-ring.inner { inset: 10px; animation: spin 5s linear infinite reverse; }
 
-    <footer class="footer">
-      <span>Owned by Slvmber • API by Lanyard • 2026</span>
-    </footer>
-  </main>
+.title-glitch {
+  margin-top: 12px;
+  font-size: 28px;
+  letter-spacing: 0.18em;
+  position: relative;
+}
 
-  <script src="script.js"></script>
-</body>
-</html>
+.title-glitch::before,
+.title-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  opacity: 0.7;
+}
+
+.title-glitch::before { color: #ff2b2b; transform: translate(-1px, 0); }
+.title-glitch::after { color: #2b9dff; transform: translate(1px, 0); }
+
+.tagline { margin-top: 8px; color: var(--muted); max-width: 360px; }
+
+/* BUTTONS */
+.btn-solid,
+.btn-ghost,
+.btn-outline {
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.btn-solid { background: var(--accent); color: #000; }
+.btn-ghost { border-color: rgba(255,255,255,0.2); }
+.btn-outline { border-color: var(--accent-soft); color: var(--accent); }
+
+/* ⭐ DISCORD PANEL WITH POWER BACKGROUND */
+.panel-discord {
+  position: relative;
+  background: url("11zon_resized.jpeg") center/cover no-repeat;
+  border-radius: 16px;
+  border: 1px solid var(--border-soft);
+  padding: 14px;
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+  margin-bottom: 22px;
+}
+
+/* PANELS (general) */
+.panel {
+  position: relative;
+  background: var(--panel);
+  border-radius: 16px;
+  border: 1px solid var(--border-soft);
+  padding: 14px;
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+  margin-bottom: 22px;
+}
+
+.panel-orbit {
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 43, 43, 0.25);
+  animation: spin 10s linear infinite;
+  opacity: 0.4;
+}
+
+.panel-slash {
+  position: absolute;
+  inset: -40%;
+  background:
+    linear-gradient(135deg, transparent 45%, rgba(255,43,43,0.4) 50%, transparent 55%);
+  opacity: 0;
+  transition: 0.25s ease;
+}
+
+.panel:hover .panel-slash { opacity: 0.45; }
+
+/* DISCORD TEXT */
+.discord-name { font-weight: 600; }
+.discord-status { font-size: 11px; color: var(--text); }
+.discord-custom { margin-top: 4px; color: var(--text); }
+
+/* SPOTIFY */
+.spotify-body { display: flex; gap: 10px; }
+.spotify-cover-wrap { width: 64px; height: 64px; position: relative; }
+.spotify-cover-wrap img { width: 100%; height: 100%; border-radius: 10px; }
+
+.spotify-glow {
+  position: absolute;
+  inset: -10px;
+  border-radius: 14px;
+  background: radial-gradient(circle, rgba(255, 43, 43, 0.4), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.panel-spotify.active .spotify-glow { opacity: 1; }
+
+/* LIVE FEED */
+.log-output {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ANIMATIONS */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fog-move { to { transform: translate3d(4%, -2%, 0) scale(1.08); } }
+@keyframes embers-flicker { to { opacity: 0.18; } }
