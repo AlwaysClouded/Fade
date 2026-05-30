@@ -27,7 +27,7 @@ body {
   filter: brightness(0.82) saturate(1.25);
 }
 
-/* GENERAL PANEL */
+/* GENERAL PANEL (THIS WAS OVERRIDING EVERYTHING) */
 .panel {
   position: relative;
   background: var(--panel);
@@ -59,19 +59,19 @@ body {
 
 .panel:hover .panel-slash { opacity: 0.45; }
 
-/* ⭐ FORCE DISCORD PANEL TO USE POWER BACKGROUND */
+/* ⭐ DISCORD PANEL WITH POWER BACKGROUND — MUST COME AFTER .panel */
 .panel-discord {
   background: url("11zon_resized.jpeg") center/cover no-repeat !important;
 }
 
-/* Make text readable on Power background */
+/* Make text readable */
 .panel-discord .discord-name,
 .panel-discord .discord-status,
 .panel-discord .discord-custom {
   color: white !important;
 }
 
-/* ⭐ POWER PANEL — FIXED ORDER + OVERRIDE */
+/* ⭐ POWER PANEL — MUST COME AFTER .panel */
 .panel-power {
   background: url("11zon_resized.jpeg") center/cover no-repeat !important;
   height: 260px;
