@@ -102,17 +102,23 @@ async function loadSpotify() {
 
   const spotify = d.spotify;
   const bar = document.getElementById("spotify-bar");
+  const cover = document.getElementById("spotify-cover");
+  const title = document.getElementById("spotify-title");
+  const artist = document.getElementById("spotify-artist");
+
+  // Always show the panel
+  bar.style.opacity = 1;
 
   if (!spotify) {
-    bar.style.opacity = 0;
+    cover.src = "https://i.imgur.com/8QfQFfC.png"; // neutral placeholder
+    title.textContent = "Not playing anything";
+    artist.textContent = "";
     return;
   }
 
-  bar.style.opacity = 1;
-
-  document.getElementById("spotify-cover").src = spotify.album_art_url;
-  document.getElementById("spotify-title").textContent = spotify.song;
-  document.getElementById("spotify-artist").textContent = spotify.artist;
+  cover.src = spotify.album_art_url;
+  title.textContent = spotify.song;
+  artist.textContent = spotify.artist;
 }
 
 loadSpotify();
