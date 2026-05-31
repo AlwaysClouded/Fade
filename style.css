@@ -345,3 +345,11 @@ body {
   position: relative;
   z-index: 2;
 }
+
+/* ⭐ ONLY CHANGE YOU REQUESTED — BUTTON VISIBILITY FIX */
+#music-unlock {
+  background: rgba(255, 43, 43, 0.15) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+  backdrop-filter: blur(4px);
+}
