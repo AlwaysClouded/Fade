@@ -204,8 +204,8 @@ body {
   inset: 0; /* makes it fill the entire panel */
   background: rgba(0, 0, 0, 0.35); /* shadow tint */
   border-radius: 16px; /* match your panel radius */
-  backdrop-filter: blur(2px); /* less blurry */
-  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(1px); /* less blurry */
+  -webkit-backdrop-filter: blur(1px);
   z-index: 1; /* behind text, above background */
 }
 
