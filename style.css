@@ -192,8 +192,8 @@ body {
 .panel-discord {
   position: relative;
   background: url("11zon_resized.jpeg") center/cover no-repeat !important;
-  backdrop-filter: blur(3px) brightness(0.6) saturation(1.9) !important;
-  -webkit-backdrop-filter: blur(3px) brightness(0.6) saturation(1.9) !important;
+  backdrop-filter: blur(2px) brightness(0.6) saturation(1.9) !important;
+  -webkit-backdrop-filter: blur(2px) brightness(0.6) saturation(1.9) !important;
   overflow: hidden;
 }
 
