@@ -101,6 +101,7 @@ function updateSpotify(d) {
 }
 
 const unlockBtn = document.getElementById("music-unlock");
+
 if (unlockBtn) {
   unlockBtn.onclick = () => {
     const audio = document.getElementById("bg-audio");
