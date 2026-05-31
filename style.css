@@ -201,14 +201,14 @@ body {
 .panel-discord::before {
   content: "";
   position: absolute;
-  top: 60px;
-  left: 20px;
-  right: 20px;
-  bottom: 120px;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
   background: rgba(0, 0, 0, 0.35); /* shadow color */
   border-radius: 14px;
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 1; /* behind text, above background */
 }
 
