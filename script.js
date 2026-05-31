@@ -2,6 +2,7 @@ const DISCORD_ID = "1360925264669966338";
 
 function logLine(text) {
   const log = document.getElementById("log-output");
+  if (!log) return;
   const span = document.createElement("span");
   span.className = "log-line";
   span.textContent = text;
@@ -21,8 +22,8 @@ function connect() {
 
   ws.onmessage = (e) => {
     const p = JSON.parse(e.data);
-   
     let userData = null;
+
     if (p.t === "INIT_STATE") {
       userData = p.d[DISCORD_ID];
     } else if (p.t === "PRESENCE_UPDATE") {
@@ -36,7 +37,7 @@ function connect() {
   };
 
   ws.onclose = () => {
-    logLine("[Lanyard] Disconnected, retrying in 3s...");
+    logLine("[Lanyard] Disconnected, retrying...");
     setTimeout(connect, 3000);
   };
 }
@@ -44,6 +45,8 @@ function connect() {
 connect();
 
 function updateDiscord(d) {
+  if (!d || !d.discord_user) return;
+
   const avatarEl = document.getElementById("dp-avatar");
   if (d.discord_user.avatar) {
     const ext = d.discord_user.avatar.startsWith("a_") ? "gif" : "png";
@@ -68,8 +71,7 @@ function updateDiscord(d) {
   document.getElementById("dp-status-text").textContent = s.text;
 
   const custom = d.activities?.find((a) => a.type === 4);
-  document.getElementById("dp-custom-status").textContent =
-    custom?.state || "No active custom status";
+  document.getElementById("dp-custom-status").textContent = custom?.state || "No active custom status";
 
   logLine(`[Discord] Status updated to ${s.text.toUpperCase()}`);
 }
@@ -85,7 +87,7 @@ function updateSpotify(d) {
     cover.src = "https://i.imgur.com/8QfQFfC.png";
     title.textContent = "Not playing anything";
     artist.textContent = "";
-    panel.classList.remove("active");
+    if (panel) panel.classList.remove("active");
     logLine("[Spotify] Session idle");
     return;
   }
@@ -93,7 +95,7 @@ function updateSpotify(d) {
   cover.src = s.album_art_url;
   title.textContent = s.song;
   artist.textContent = s.artist;
-  panel.classList.add("active");
+  if (panel) panel.classList.add("active");
 
   logLine(`[Spotify] ${s.song} — ${s.artist}`);
 }
@@ -102,8 +104,10 @@ const unlockBtn = document.getElementById("music-unlock");
 if(unlockBtn) {
   unlockBtn.onclick = () => {
     const audio = document.getElementById("bg-audio");
-    audio.muted = false;
-    audio.play().catch(() => { logLine("[Audio] Playback blocked by browser"); });
+    if (audio) {
+      audio.muted = false;
+      audio.play().catch(() => { logLine("[Audio] Playback blocked by browser"); });
+    }
     unlockBtn.style.display = "none";
     logLine("[Audio] Blood rush unmuted");
   };
@@ -111,6 +115,7 @@ if(unlockBtn) {
 
 (function () {
   const canvas = document.getElementById("bg-canvas");
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
   const parts = [];
 
@@ -146,7 +151,7 @@ if(unlockBtn) {
 
       ctx.beginPath();
       const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3);
-      g.addColorStop(0, "rgba(255,43,43,0.8)"); // Adjusted to match new Ruby accent
+      g.addColorStop(0, "rgba(255,43,43,0.8)");
       g.addColorStop(1, "rgba(255,43,43,0)");
       ctx.fillStyle = g;
       ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
