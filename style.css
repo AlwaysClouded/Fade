@@ -188,6 +188,7 @@ body {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   transition: transform 0.3s ease, border-color 0.3s ease;
 }
+
 /* POWER IMAGE + BLUR */
 .panel-discord {
   position: relative;
@@ -201,12 +202,12 @@ body {
 .panel-discord::before {
   content: "";
   position: absolute;
-  inset: 0; /* makes it fill the entire panel */
-  background: rgba(0, 0, 0, 0.35); /* shadow tint */
-  border-radius: 16px; /* match your panel radius */
-  backdrop-filter: blur(1px); /* less blurry */
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 16px;
+  backdrop-filter: blur(1px);
   -webkit-backdrop-filter: blur(1px);
-  z-index: 1; /* behind text, above background */
+  z-index: 1;
 }
 
 /* KEEP TEXT ABOVE SHADOW */
@@ -216,27 +217,19 @@ body {
   z-index: 2;
 }
 
-
-/* ENSURE TEXT STAYS ABOVE SHADOW */
-.panel-discord .panel-header,
-.panel-discord .panel-body {
-  position: relative;
-  z-index: 2;
-}
-
 /* DISCORD TEXT COLORS */
 .discord-name {
-  color: #ff2b2b !important; /* username color */
+  color: #ff2b2b !important;
   font-weight: 700;
 }
 
 .discord-status {
-  color: #ffffff !important; /* status color */
+  color: #ffffff !important;
   font-weight: 600;
 }
 
 .discord-custom {
-  color: #ff2b2b !important; /* custom status color */
+  color: #ff2b2b !important;
   font-style: italic;
 }
 
@@ -326,3 +319,29 @@ body {
 .panel-power, .power-body { display: none !important; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ⭐ UPDATED SPOTIFY PANEL (ONLY CHANGE YOU REQUESTED) */
+.panel-spotify {
+  position: relative;
+  background: url("0e6136ba-521d-4095-a20e-de9f597754d1.jpeg") center/cover no-repeat !important;
+  backdrop-filter: blur(0px) brightness(0.6) saturation(1.9) !important;
+  -webkit-backdrop-filter: blur(0px) brightness(0.6) saturation(1.9) !important;
+  overflow: hidden;
+}
+
+.panel-spotify::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 16px;
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  z-index: 1;
+}
+
+.panel-spotify .panel-header,
+.panel-spotify .panel-body {
+  position: relative;
+  z-index: 2;
+}
