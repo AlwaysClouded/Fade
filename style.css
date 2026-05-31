@@ -306,6 +306,32 @@ body {
   to { opacity: 1; transform: translateX(0); }
 }
 
+/* ⭐ MATCH LIVE FEED PANEL TO DISCORD + SPOTIFY */
+.panel-log {
+  position: relative;
+  background: url("2c6e5304-bdd5-49cc-b6f3-d6ff993788a3.jpeg") center/cover no-repeat !important;
+  backdrop-filter: blur(0px) brightness(0.6) saturation(1.9) !important;
+  -webkit-backdrop-filter: blur(0px) brightness(0.6) saturation(1.9) !important;
+  overflow: hidden;
+}
+
+.panel-log::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 16px;
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  z-index: 1;
+}
+
+.panel-log .panel-header,
+.panel-log .panel-body {
+  position: relative;
+  z-index: 2;
+}
+
 .footer {
   margin-top: 40px;
   text-align: center;
@@ -352,30 +378,4 @@ body {
   border-color: var(--accent) !important;
   color: var(--accent) !important;
   backdrop-filter: blur(4px);
-}
-
-/* ⭐ MATCH LIVE FEED PANEL TO DISCORD + SPOTIFY */
-.panel-log {
-  position: relative;
-  background: url("2c6e5304-bdd5-49cc-b6f3-d6ff993788a3.jpeg") center/cover no-repeat !important;
-  backdrop-filter: blur(0px) brightness(0.6) saturation(1.9) !important;
-  -webkit-backdrop-filter: blur(0px) brightness(0.6) saturation(1.9) !important;
-  overflow: hidden;
-}
-
-.panel-log::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  border-radius: 16px;
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(1px);
-  z-index: 1;
-}
-
-.panel-log .panel-header,
-.panel-log .panel-body {
-  position: relative;
-  z-index: 2;
 }
