@@ -207,8 +207,8 @@ body {
   bottom: 22px;
   background: rgba(0, 0, 0, 0.35); /* shadow color */
   border-radius: 14px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   z-index: 1; /* behind text, above background */
 }
 
