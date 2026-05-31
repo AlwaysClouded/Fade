@@ -201,7 +201,7 @@ body {
 .panel-discord::before {
   content: "";
   position: absolute;
-  top: 22px;
+  top: 40px;
   left: 22px;
   right: 22px;
   bottom: 22px;
