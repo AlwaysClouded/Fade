@@ -101,15 +101,24 @@ function updateSpotify(d) {
 }
 
 const unlockBtn = document.getElementById("music-unlock");
-if(unlockBtn) {
+if (unlockBtn) {
   unlockBtn.onclick = () => {
     const audio = document.getElementById("bg-audio");
-    if (audio) {
+    if (!audio) return;
+
+    if (audio.muted || audio.paused) {
       audio.muted = false;
-      audio.play().catch(() => { logLine("[Audio] Playback blocked by browser"); });
+      audio.play().catch(() => {
+        logLine("[Audio] Playback blocked by browser");
+      });
+      unlockBtn.textContent = "MUTE BLOOD RUSH";
+      logLine("[Audio] Blood rush unmuted");
+    } else {
+      audio.muted = true;
+      audio.pause();
+      unlockBtn.textContent = "UNMUTE BLOOD RUSH";
+      logLine("[Audio] Blood rush muted");
     }
-    unlockBtn.style.display = "none";
-    logLine("[Audio] Blood rush unmuted");
   };
 }
 
