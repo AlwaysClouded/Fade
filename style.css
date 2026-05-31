@@ -192,7 +192,7 @@ body {
 .panel-discord {
   background: url("11zon_resized.jpeg") center/cover no-repeat !important;
   backdrop-filter: blur(18px) brightness(0.8) !important;
-  -webkit-backdrop-filter: blur(28px) brightness(0.6) !important;
+  -webkit-backdrop-filter: blur(40px) brightness(0.6) !important;
 }
 .panel:hover {
   transform: translateY(-2px);
