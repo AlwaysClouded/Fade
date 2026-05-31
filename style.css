@@ -201,10 +201,10 @@ body {
 .panel-discord::before {
   content: "";
   position: absolute;
-  top: 40px;
-  left: 22px;
-  right: 22px;
-  bottom: 22px;
+  top: 60px;
+  left: 20px;
+  right: 20px;
+  bottom: 120px;
   background: rgba(0, 0, 0, 0.35); /* shadow color */
   border-radius: 14px;
   backdrop-filter: blur(28px);
