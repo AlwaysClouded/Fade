@@ -197,20 +197,25 @@ body {
   overflow: hidden;
 }
 
-/* SHADOW PANEL BEHIND TEXT */
+/* FULL‑SIZE SHADOW PANEL BEHIND TEXT */
 .panel-discord::before {
   content: "";
   position: absolute;
-  top: 0px;
-  left: 0px;
-  right: 0px;
-  bottom: 0px;
-  background: rgba(0, 0, 0, 0.35); /* shadow color */
-  border-radius: 0px;
-  backdrop-filter: blur(6px);
+  inset: 0; /* makes it fill the entire panel */
+  background: rgba(0, 0, 0, 0.35); /* shadow tint */
+  border-radius: 16px; /* match your panel radius */
+  backdrop-filter: blur(6px); /* less blurry */
   -webkit-backdrop-filter: blur(6px);
   z-index: 1; /* behind text, above background */
 }
+
+/* KEEP TEXT ABOVE SHADOW */
+.panel-discord .panel-header,
+.panel-discord .panel-body {
+  position: relative;
+  z-index: 2;
+}
+
 
 /* ENSURE TEXT STAYS ABOVE SHADOW */
 .panel-discord .panel-header,
