@@ -247,7 +247,7 @@ body {
 
 .discord-name { font-size: 1.1rem; color: #fff !important; font-weight: 700; }
 .discord-status { font-size: 0.85rem; color: var(--accent) !important; font-weight: 600; }
-.discord-custom { font-size: 0.85rem; color: #000 !important; font-style: italic; margin-top: 2px; }
+.discord-custom { font-size: 0.85rem; color: #000000 !important; font-style: italic; margin-top: 4px; }
 
 .spotify-body { flex-direction: row; align-items: center; gap: 16px; }
 .spotify-cover-wrap { position: relative; width: 56px; height: 56px; flex-shrink: 0; }
