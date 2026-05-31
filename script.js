@@ -6,7 +6,7 @@ function logLine(text) {
   span.className = "log-line";
   span.textContent = text;
   log.appendChild(span);
-  while (log.children.length > 8) log.removeChild(log.firstChild);
+  while (log.children.length > 5) log.removeChild(log.firstChild);
 }
 
 let ws;
@@ -15,33 +15,44 @@ function connect() {
   ws = new WebSocket("wss://api.lanyard.rest/socket");
 
   ws.onopen = () => {
-    logLine("[Lanyard] Connected");
+    logLine("[Lanyard] Connected to gateway");
     ws.send(JSON.stringify({ op: 2, d: { subscribe_to_id: DISCORD_ID } }));
   };
 
   ws.onmessage = (e) => {
     const p = JSON.parse(e.data);
-    if (p.t !== "INIT_STATE" && p.t !== "PRESENCE_UPDATE") return;
-    updateDiscord(p.d);
-    updateSpotify(p.d);
+   
+    let userData = null;
+    if (p.t === "INIT_STATE") {
+      userData = p.d[DISCORD_ID];
+    } else if (p.t === "PRESENCE_UPDATE") {
+      userData = p.d;
+    }
+
+    if (userData) {
+      updateDiscord(userData);
+      updateSpotify(userData);
+    }
   };
 
   ws.onclose = () => {
-    logLine("[Lanyard] Disconnected, retrying...");
+    logLine("[Lanyard] Disconnected, retrying in 3s...");
     setTimeout(connect, 3000);
   };
 }
 
 connect();
 
-/* DISCORD */
 function updateDiscord(d) {
-  document.getElementById("dp-avatar").src =
-    d.discord_user.avatar
-      ? `https://cdn.discordapp.com/avatars/${d.discord_user.id}/${d.discord_user.avatar}.png`
-      : "https://cdn.discordapp.com/embed/avatars/0.png";
+  const avatarEl = document.getElementById("dp-avatar");
+  if (d.discord_user.avatar) {
+    const ext = d.discord_user.avatar.startsWith("a_") ? "gif" : "png";
+    avatarEl.src = `https://cdn.discordapp.com/avatars/${d.discord_user.id}/${d.discord_user.avatar}.${ext}?size=128`;
+  } else {
+    avatarEl.src = "https://cdn.discordapp.com/embed/avatars/0.png";
+  }
 
-  document.getElementById("dp-username").textContent = d.discord_user.username;
+  document.getElementById("dp-username").textContent = d.discord_user.global_name || d.discord_user.username;
 
   const statusMap = {
     online: { color: "#43b581", text: "Online" },
@@ -53,16 +64,16 @@ function updateDiscord(d) {
   const s = statusMap[d.discord_status] || statusMap.offline;
 
   document.getElementById("dp-status-dot").style.background = s.color;
+  document.getElementById("dp-status-dot").style.boxShadow = `0 0 8px ${s.color}`;
   document.getElementById("dp-status-text").textContent = s.text;
 
   const custom = d.activities?.find((a) => a.type === 4);
   document.getElementById("dp-custom-status").textContent =
     custom?.state || "No active custom status";
 
-  logLine(`[Discord] ${d.discord_user.username} is ${s.text}`);
+  logLine(`[Discord] Status updated to ${s.text.toUpperCase()}`);
 }
 
-/* SPOTIFY */
 function updateSpotify(d) {
   const s = d.spotify;
   const cover = document.getElementById("spotify-cover");
@@ -75,7 +86,7 @@ function updateSpotify(d) {
     title.textContent = "Not playing anything";
     artist.textContent = "";
     panel.classList.remove("active");
-    logLine("[Spotify] Idle");
+    logLine("[Spotify] Session idle");
     return;
   }
 
@@ -87,15 +98,17 @@ function updateSpotify(d) {
   logLine(`[Spotify] ${s.song} — ${s.artist}`);
 }
 
-/* AUDIO UNLOCK */
-document.getElementById("music-unlock").onclick = () => {
-  const audio = document.getElementById("bg-audio");
-  audio.muted = false;
-  audio.play().catch(() => {});
-  document.getElementById("music-unlock").style.display = "none";
-};
+const unlockBtn = document.getElementById("music-unlock");
+if(unlockBtn) {
+  unlockBtn.onclick = () => {
+    const audio = document.getElementById("bg-audio");
+    audio.muted = false;
+    audio.play().catch(() => { logLine("[Audio] Playback blocked by browser"); });
+    unlockBtn.style.display = "none";
+    logLine("[Audio] Blood rush unmuted");
+  };
+}
 
-/* EMBERS */
 (function () {
   const canvas = document.getElementById("bg-canvas");
   const ctx = canvas.getContext("2d");
@@ -133,8 +146,8 @@ document.getElementById("music-unlock").onclick = () => {
 
       ctx.beginPath();
       const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3);
-      g.addColorStop(0, "rgba(255,80,80,0.6)");
-      g.addColorStop(1, "rgba(255,80,80,0)");
+      g.addColorStop(0, "rgba(255,43,43,0.8)"); // Adjusted to match new Ruby accent
+      g.addColorStop(1, "rgba(255,43,43,0)");
       ctx.fillStyle = g;
       ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
       ctx.fill();
