@@ -25,7 +25,7 @@ function connect() {
     let userData = null;
 
     if (p.t === "INIT_STATE") {
-      userData = p.d[DISCORD_ID];
+      userData = p.d[discord_id];
     } else if (p.t === "PRESENCE_UPDATE") {
       userData = p.d;
     }
