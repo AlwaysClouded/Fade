@@ -10,40 +10,34 @@ function logLine(text) {
   while (log.children.length > 5) log.removeChild(log.firstChild);
 }
 
-let ws;
+// -----------------------------
+// POLLING INSTEAD OF WEBSOCKET
+// -----------------------------
+async function pollLanyard() {
+  try {
+    const res = await fetch(
+      `https://api.lanyard.rest/v1/users/${DISCORD_ID}?t=${Date.now()}`,
+      { cache: "no-store" }
+    );
 
-function connect() {
-  ws = new WebSocket("wss://api.lanyard.rest/socket");
+    const json = await res.json();
+    const d = json.data;
 
-  ws.onopen = () => {
-    logLine("[Lanyard] Connected to gateway");
-    ws.send(JSON.stringify({ op: 2, d: { subscribe_to_id: DISCORD_ID } }));
-  };
+    updateDiscord(d);
+    updateSpotify(d);
 
-  ws.onmessage = (e) => {
-    const p = JSON.parse(e.data);
-    let userData = null;
-
-    if (p.t === "INIT_STATE") {
-      userData = p.d[discord_id];
-    } else if (p.t === "PRESENCE_UPDATE") {
-      userData = p.d;
-    }
-
-    if (userData) {
-      updateDiscord(userData);
-      updateSpotify(userData);
-    }
-  };
-
-  ws.onclose = () => {
-    logLine("[Lanyard] Disconnected, retrying...");
-    setTimeout(connect, 3000);
-  };
+    logLine("[Lanyard] Polled presence update");
+  } catch (err) {
+    logLine("[Lanyard] Polling failed");
+  }
 }
 
-connect();
+setInterval(pollLanyard, 12000);
+pollLanyard();
 
+// -----------------------------
+// DISCORD PANEL UPDATE
+// -----------------------------
 function updateDiscord(d) {
   if (!d || !d.discord_user) return;
 
@@ -55,7 +49,8 @@ function updateDiscord(d) {
     avatarEl.src = "https://cdn.discordapp.com/embed/avatars/0.png";
   }
 
-  document.getElementById("dp-username").textContent = d.discord_user.global_name || d.discord_user.username;
+  document.getElementById("dp-username").textContent =
+    d.discord_user.global_name || d.discord_user.username;
 
   const statusMap = {
     online: { color: "#43b581", text: "Online" },
@@ -71,9 +66,27 @@ function updateDiscord(d) {
   document.getElementById("dp-status-text").textContent = s.text;
 
   const custom = d.activities?.find((a) => a.type === 4);
-  document.getElementById("dp-custom-status").textContent = custom?.state || "No active custom status";
+  document.getElementById("dp-custom-status").textContent =
+    custom?.state || "No active custom status";
 
   logLine(`[Discord] Status updated to ${s.text.toUpperCase()}`);
+}
+
+// -----------------------------
+// SPOTIFY PANEL WITH SMOOTH TRANSITIONS
+// -----------------------------
+let previousTrackId = null;
+
+function fadeOutElements() {
+  document.getElementById("spotify-cover").classList.add("fade-out");
+  document.getElementById("spotify-title").classList.add("fade-out");
+  document.getElementById("spotify-artist").classList.add("fade-out");
+}
+
+function fadeInElements() {
+  document.getElementById("spotify-cover").classList.remove("fade-out");
+  document.getElementById("spotify-title").classList.remove("fade-out");
+  document.getElementById("spotify-artist").classList.remove("fade-out");
 }
 
 function updateSpotify(d) {
@@ -84,22 +97,40 @@ function updateSpotify(d) {
   const panel = document.querySelector(".panel-spotify");
 
   if (!s) {
-    cover.src = "https://i.imgur.com/8QfQFfC.png";
-    title.textContent = "Not playing anything";
-    artist.textContent = "";
-    if (panel) panel.classList.remove("active");
+    fadeOutElements();
+    setTimeout(() => {
+      cover.src = "https://i.imgur.com/8QfQFfC.png";
+      title.textContent = "Not playing anything";
+      artist.textContent = "";
+      if (panel) panel.classList.remove("active");
+      fadeInElements();
+    }, 400);
+
     logLine("[Spotify] Session idle");
+    previousTrackId = null;
     return;
   }
 
-  cover.src = s.album_art_url;
-  title.textContent = s.song;
-  artist.textContent = s.artist;
-  if (panel) panel.classList.add("active");
+  // Only transition if the track actually changed
+  if (s.track_id !== previousTrackId) {
+    fadeOutElements();
 
-  logLine(`[Spotify] ${s.song} — ${s.artist}`);
+    setTimeout(() => {
+      cover.src = s.album_art_url;
+      title.textContent = s.song;
+      artist.textContent = s.artist;
+      if (panel) panel.classList.add("active");
+      fadeInElements();
+    }, 400);
+
+    logLine(`[Spotify] ${s.song} — ${s.artist}`);
+    previousTrackId = s.track_id;
+  }
 }
 
+// -----------------------------
+// AUDIO UNLOCK BUTTON
+// -----------------------------
 const unlockBtn = document.getElementById("music-unlock");
 
 if (unlockBtn) {
@@ -123,6 +154,9 @@ if (unlockBtn) {
   };
 }
 
+// -----------------------------
+// BACKGROUND PARTICLE EFFECT
+// -----------------------------
 (function () {
   const canvas = document.getElementById("bg-canvas");
   if (!canvas) return;
