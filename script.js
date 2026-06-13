@@ -123,11 +123,16 @@ function fadeInElements() {
 
 function updateSpotify(d) {
   const s = d.spotify;
+function updateSpotify(d) {
+  const s = d.spotify;
   const cover = document.getElementById("spotify-cover");
   const title = document.getElementById("spotify-title");
   const artist = document.getElementById("spotify-artist");
   const panel = document.querySelector(".panel-spotify");
 
+  if (!cover || !title || !artist || !panel) return;
+
+  // If Spotify is NOT playing
   if (!s) {
     fadeOutElements();
     setTimeout(() => {
@@ -138,11 +143,12 @@ function updateSpotify(d) {
       fadeInElements();
     }, 400);
 
-    previousTrackId = null;
-    logLine("[Spotify] Idle");
+    previousTrackId = null; // RESET so next track triggers
+    logLine("[Spotify] Idle (spotify: null)");
     return;
   }
 
+  // If Spotify just started playing OR track changed
   if (s.track_id !== previousTrackId) {
     fadeOutElements();
 
@@ -154,7 +160,7 @@ function updateSpotify(d) {
       fadeInElements();
     }, 400);
 
-    logLine(`[Spotify] ${s.song} — ${s.artist}`);
+    logLine(`[Spotify] Now playing: ${s.song} — ${s.artist}`);
     previousTrackId = s.track_id;
   }
 }
