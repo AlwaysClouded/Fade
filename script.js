@@ -1,5 +1,8 @@
 const DISCORD_ID = "1360925264669966338";
 
+// -----------------------------
+// LOGGING
+// -----------------------------
 function logLine(text) {
   const log = document.getElementById("log-output");
   if (!log) return;
@@ -11,9 +14,17 @@ function logLine(text) {
 }
 
 // -----------------------------
-// POLLING INSTEAD OF WEBSOCKET
+// UNIFIED ENGINE STATE
 // -----------------------------
-async function pollLanyard() {
+let lastDiscord = null;
+let lastSpotify = null;
+let pollRate = 12000; // adaptive
+let isSpotifyActive = false;
+
+// -----------------------------
+// UNIFIED ENGINE LOOP
+// -----------------------------
+async function presenceEngine() {
   try {
     const res = await fetch(
       `https://api.lanyard.rest/v1/users/${DISCORD_ID}?t=${Date.now()}`,
@@ -23,17 +34,38 @@ async function pollLanyard() {
     const json = await res.json();
     const d = json.data;
 
-    updateDiscord(d);
-    updateSpotify(d);
+    // --- DISCORD CHANGE DETECTION ---
+    if (JSON.stringify(d.discord_user) !== JSON.stringify(lastDiscord)) {
+      updateDiscord(d);
+      lastDiscord = structuredClone(d.discord_user);
+    }
 
-    logLine("[Lanyard] Polled presence update");
+    // --- SPOTIFY CHANGE DETECTION ---
+    if (JSON.stringify(d.spotify) !== JSON.stringify(lastSpotify)) {
+      updateSpotify(d);
+      lastSpotify = structuredClone(d.spotify);
+    }
+
+    // --- ADAPTIVE POLLING ---
+    if (d.spotify) {
+      pollRate = 6000; // faster when music is playing
+      isSpotifyActive = true;
+    } else {
+      pollRate = 12000; // slower when idle
+      isSpotifyActive = false;
+    }
+
+    logLine(`[Engine] Updated (rate: ${pollRate / 1000}s)`);
+
   } catch (err) {
-    logLine("[Lanyard] Polling failed");
+    logLine("[Engine] Fetch failed, retrying...");
+    pollRate = 8000; // fallback
   }
+
+  setTimeout(presenceEngine, pollRate);
 }
 
-setInterval(pollLanyard, 12000);
-pollLanyard();
+presenceEngine();
 
 // -----------------------------
 // DISCORD PANEL UPDATE
@@ -69,7 +101,7 @@ function updateDiscord(d) {
   document.getElementById("dp-custom-status").textContent =
     custom?.state || "No active custom status";
 
-  logLine(`[Discord] Status updated to ${s.text.toUpperCase()}`);
+  logLine(`[Discord] Status updated → ${s.text}`);
 }
 
 // -----------------------------
@@ -102,16 +134,15 @@ function updateSpotify(d) {
       cover.src = "https://i.imgur.com/8QfQFfC.png";
       title.textContent = "Not playing anything";
       artist.textContent = "";
-      if (panel) panel.classList.remove("active");
+      panel.classList.remove("active");
       fadeInElements();
     }, 400);
 
-    logLine("[Spotify] Session idle");
     previousTrackId = null;
+    logLine("[Spotify] Idle");
     return;
   }
 
-  // Only transition if the track actually changed
   if (s.track_id !== previousTrackId) {
     fadeOutElements();
 
@@ -119,7 +150,7 @@ function updateSpotify(d) {
       cover.src = s.album_art_url;
       title.textContent = s.song;
       artist.textContent = s.artist;
-      if (panel) panel.classList.add("active");
+      panel.classList.add("active");
       fadeInElements();
     }, 400);
 
@@ -127,83 +158,3 @@ function updateSpotify(d) {
     previousTrackId = s.track_id;
   }
 }
-
-// -----------------------------
-// AUDIO UNLOCK BUTTON
-// -----------------------------
-const unlockBtn = document.getElementById("music-unlock");
-
-if (unlockBtn) {
-  unlockBtn.onclick = () => {
-    const audio = document.getElementById("bg-audio");
-    if (!audio) return;
-
-    if (audio.muted || audio.paused) {
-      audio.muted = false;
-      audio.play().catch(() => {
-        logLine("[Audio] Playback blocked by browser");
-      });
-      unlockBtn.textContent = "MUTE BLOOD RUSH";
-      logLine("[Audio] Blood rush unmuted");
-    } else {
-      audio.muted = true;
-      audio.pause();
-      unlockBtn.textContent = "UNMUTE BLOOD RUSH";
-      logLine("[Audio] Blood rush muted");
-    }
-  };
-}
-
-// -----------------------------
-// BACKGROUND PARTICLE EFFECT
-// -----------------------------
-(function () {
-  const canvas = document.getElementById("bg-canvas");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  const parts = [];
-
-  function resize() {
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
-  }
-
-  resize();
-  addEventListener("resize", resize);
-
-  for (let i = 0; i < 70; i++) {
-    parts.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 0.25,
-      vy: -0.2 - Math.random() * 0.4,
-      r: 1 + Math.random() * 2
-    });
-  }
-
-  function tick() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    parts.forEach((p) => {
-      p.x += p.vx;
-      p.y += p.vy;
-
-      if (p.y < -10) {
-        p.y = canvas.height + 10;
-        p.x = Math.random() * canvas.width;
-      }
-
-      ctx.beginPath();
-      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3);
-      g.addColorStop(0, "rgba(255,43,43,0.8)");
-      g.addColorStop(1, "rgba(255,43,43,0)");
-      ctx.fillStyle = g;
-      ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
-      ctx.fill();
-    });
-
-    requestAnimationFrame(tick);
-  }
-
-  tick();
-})();
