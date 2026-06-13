@@ -372,6 +372,22 @@ body {
   z-index: 2;
 }
 
+/* ⭐ Smooth Spotify Transitions */
+#spotify-cover,
+#spotify-title,
+#spotify-artist {
+  transition: opacity 0.4s ease;
+  opacity: 1;
+}
+
+.fade-out {
+  opacity: 0;
+}
+
+.fade-in {
+  opacity: 1;
+}
+
 /* ⭐ ONLY CHANGE YOU REQUESTED — BUTTON VISIBILITY FIX */
 #music-unlock {
   background: rgba(255, 43, 43, 0.15) !important;
