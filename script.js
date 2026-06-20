@@ -1,5 +1,10 @@
 const DISCORD_ID = "1360925264669966338";
 
+let ws;
+let lastStatus = null;
+let lastTrackId = null;
+let lastXboxState = null;
+
 // -----------------------------
 // LOGGING
 // -----------------------------
@@ -14,40 +19,57 @@ function logLine(text) {
 }
 
 // -----------------------------
-// ENGINE STATE
+// LANYARD WEBSOCKET
 // -----------------------------
-let lastStatus = null;
-let lastTrack = null;
-let lastRealSpotify = null;
-let spotifyNullCount = 0;
-const NULL_LIMIT = 3;
-let lastXboxState = null;
+function connectLanyard() {
+  ws = new WebSocket("wss://api.lanyard.rest/socket");
 
-// -----------------------------
-// MAIN POLLER
-// -----------------------------
-async function pollLanyard() {
-  try {
-    const res = await fetch(
-      `https://api.lanyard.rest/v1/users/${DISCORD_ID}?t=${Date.now()}`,
-      { cache: "no-store" }
+  ws.onopen = () => {
+    logLine("[Lanyard] Connected to gateway");
+    ws.send(
+      JSON.stringify({
+        op: 2,
+        d: { subscribe_to_id: DISCORD_ID }
+      })
     );
+  };
 
-    const json = await res.json();
-    const d = json.data;
+  ws.onmessage = (event) => {
+    const packet = JSON.parse(event.data);
 
-    updateDiscord(d);
-    updateSpotify(d);
-    updateXbox(d);
+    if (packet.op === 1) {
+      // heartbeat
+      ws.send(JSON.stringify({ op: 3 }));
+      return;
+    }
 
-    logLine("[Lanyard] Polled successfully");
-  } catch (err) {
-    logLine("[Lanyard] Poll failed");
-  }
+    if (packet.t === "INIT_STATE") {
+      const d = packet.d[DISCORD_ID];
+      if (d) handlePresence(d, "[INIT]");
+    } else if (packet.t === "PRESENCE_UPDATE") {
+      const d = packet.d;
+      if (d) handlePresence(d, "[UPDATE]");
+    }
+  };
+
+  ws.onclose = () => {
+    logLine("[Lanyard] Disconnected, retrying in 3s...");
+    setTimeout(connectLanyard, 3000);
+  };
+
+  ws.onerror = () => {
+    logLine("[Lanyard] WebSocket error");
+  };
 }
 
-setInterval(pollLanyard, 10000);
-pollLanyard();
+function handlePresence(d, tag) {
+  updateDiscord(d);
+  updateSpotify(d);
+  updateXbox(d);
+  logLine(`${tag} Presence processed`);
+}
+
+connectLanyard();
 
 // -----------------------------
 // DISCORD UPDATE
@@ -90,7 +112,7 @@ function updateDiscord(d) {
 }
 
 // -----------------------------
-// SPOTIFY — ALWAYS TRACKING ENGINE
+// SPOTIFY WITH SMOOTH TRANSITIONS
 // -----------------------------
 function fadeOutSpotify() {
   document.getElementById("spotify-cover").classList.add("fade-out");
@@ -113,14 +135,7 @@ function updateSpotify(d) {
   if (!cover || !title || !artist || !panel) return;
 
   if (!s) {
-    spotifyNullCount++;
-
-    if (lastRealSpotify && spotifyNullCount < NULL_LIMIT) {
-      logLine("[Spotify] Discord lag — keeping last track");
-      return;
-    }
-
-    if (lastTrack !== null) {
+    if (lastTrackId !== null) {
       fadeOutSpotify();
       setTimeout(() => {
         cover.src = "https://i.imgur.com/8QfQFfC.png";
@@ -130,16 +145,13 @@ function updateSpotify(d) {
         fadeInSpotify();
       }, 400);
 
-      logLine("[Spotify] Fully idle");
-      lastTrack = null;
-      lastRealSpotify = null;
+      logLine("[Spotify] Idle");
+      lastTrackId = null;
     }
     return;
   }
 
-  spotifyNullCount = 0;
-
-  if (!lastTrack || s.track_id !== lastTrack.track_id) {
+  if (s.track_id !== lastTrackId) {
     fadeOutSpotify();
 
     setTimeout(() => {
@@ -151,8 +163,7 @@ function updateSpotify(d) {
     }, 400);
 
     logLine(`[Spotify] ${s.song} — ${s.artist}`);
-    lastTrack = s;
-    lastRealSpotify = s;
+    lastTrackId = s.track_id;
   }
 }
 
@@ -160,7 +171,7 @@ function updateSpotify(d) {
 // XBOX ACTIVITY PANEL
 // -----------------------------
 function updateXbox(d) {
-  const xbox = d.activities?.find(a => a.name === "Xbox");
+  const xbox = d.activities?.find((a) => a.name === "Xbox");
 
   const cover = document.getElementById("xbox-cover");
   const title = document.getElementById("xbox-title");
@@ -180,7 +191,8 @@ function updateXbox(d) {
     return;
   }
 
-  const stateKey = (xbox.details || "") + (xbox.state || "") + (xbox.assets?.large_image || "");
+  const stateKey =
+    (xbox.details || "") + (xbox.state || "") + (xbox.assets?.large_image || "");
   if (stateKey === lastXboxState) return;
 
   title.textContent = xbox.state || "Playing on Xbox";
