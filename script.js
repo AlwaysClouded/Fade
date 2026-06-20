@@ -8,7 +8,7 @@ let lastXboxState = null;
 // -----------------------------
 // LOGGING
 // -----------------------------
-function logLine(text) {
+function logLine(text: string) {
   const log = document.getElementById("log-output");
   if (!log) return;
   const span = document.createElement("span");
@@ -38,7 +38,6 @@ function connectLanyard() {
     const packet = JSON.parse(event.data);
 
     if (packet.op === 1) {
-      // heartbeat
       ws.send(JSON.stringify({ op: 3 }));
       return;
     }
@@ -62,22 +61,34 @@ function connectLanyard() {
   };
 }
 
-function handlePresence(d, tag) {
+connectLanyard();
+
+// -----------------------------
+// HANDLE PRESENCE + DEBUG LOGGING
+// -----------------------------
+function handlePresence(d: any, tag: string) {
+  logLine(`${tag} Presence received`);
+
+  // ⭐ FULL DEBUG LOGGING ⭐
+  logLine("[DEBUG] Activities: " + JSON.stringify(d.activities || []));
+  logLine("[DEBUG] Spotify: " + JSON.stringify(d.spotify || null));
+  logLine("[DEBUG] Status: " + d.discord_status);
+  logLine("[DEBUG] Xbox: " + JSON.stringify(d.activities?.find((a: any) => a.name === "Xbox") || null));
+
   updateDiscord(d);
   updateSpotify(d);
   updateXbox(d);
+
   logLine(`${tag} Presence processed`);
 }
-
-connectLanyard();
 
 // -----------------------------
 // DISCORD UPDATE
 // -----------------------------
-function updateDiscord(d) {
+function updateDiscord(d: any) {
   if (!d || !d.discord_user) return;
 
-  const avatarEl = document.getElementById("dp-avatar");
+  const avatarEl = document.getElementById("dp-avatar") as HTMLImageElement;
   if (d.discord_user.avatar) {
     const ext = d.discord_user.avatar.startsWith("a_") ? "gif" : "png";
     avatarEl.src = `https://cdn.discordapp.com/avatars/${d.discord_user.id}/${d.discord_user.avatar}.${ext}?size=128`;
@@ -85,10 +96,10 @@ function updateDiscord(d) {
     avatarEl.src = "https://cdn.discordapp.com/embed/avatars/0.png";
   }
 
-  document.getElementById("dp-username").textContent =
+  (document.getElementById("dp-username") as HTMLElement).textContent =
     d.discord_user.global_name || d.discord_user.username;
 
-  const statusMap = {
+  const statusMap: any = {
     online: { color: "#43b581", text: "Online" },
     idle: { color: "#faa61a", text: "Idle" },
     dnd: { color: "#f04747", text: "Do Not Disturb" },
@@ -97,12 +108,14 @@ function updateDiscord(d) {
 
   const s = statusMap[d.discord_status] || statusMap.offline;
 
-  document.getElementById("dp-status-dot").style.background = s.color;
-  document.getElementById("dp-status-dot").style.boxShadow = `0 0 8px ${s.color}`;
-  document.getElementById("dp-status-text").textContent = s.text;
+  const dot = document.getElementById("dp-status-dot") as HTMLElement;
+  dot.style.background = s.color;
+  dot.style.boxShadow = `0 0 8px ${s.color}`;
 
-  const custom = d.activities?.find((a) => a.type === 4);
-  document.getElementById("dp-custom-status").textContent =
+  (document.getElementById("dp-status-text") as HTMLElement).textContent = s.text;
+
+  const custom = d.activities?.find((a: any) => a.type === 4);
+  (document.getElementById("dp-custom-status") as HTMLElement).textContent =
     custom?.state || "No active custom status";
 
   if (lastStatus !== d.discord_status) {
@@ -115,24 +128,23 @@ function updateDiscord(d) {
 // SPOTIFY WITH SMOOTH TRANSITIONS
 // -----------------------------
 function fadeOutSpotify() {
-  document.getElementById("spotify-cover").classList.add("fade-out");
-  document.getElementById("spotify-title").classList.add("fade-out");
-  document.getElementById("spotify-artist").classList.add("fade-out");
+  document.getElementById("spotify-cover")?.classList.add("fade-out");
+  document.getElementById("spotify-title")?.classList.add("fade-out");
+  document.getElementById("spotify-artist")?.classList.add("fade-out");
 }
 
 function fadeInSpotify() {
-  document.getElementById("spotify-cover").classList.remove("fade-out");
-  document.getElementById("spotify-title").classList.remove("fade-out");
-  document.getElementById("spotify-artist").classList.remove("fade-out");
+  document.getElementById("spotify-cover")?.classList.remove("fade-out");
+  document.getElementById("spotify-title")?.classList.remove("fade-out");
+  document.getElementById("spotify-artist")?.classList.remove("fade-out");
 }
 
-function updateSpotify(d) {
+function updateSpotify(d: any) {
   const s = d.spotify;
-  const cover = document.getElementById("spotify-cover");
-  const title = document.getElementById("spotify-title");
-  const artist = document.getElementById("spotify-artist");
-  const panel = document.querySelector(".panel-spotify");
-  if (!cover || !title || !artist || !panel) return;
+  const cover = document.getElementById("spotify-cover") as HTMLImageElement;
+  const title = document.getElementById("spotify-title") as HTMLElement;
+  const artist = document.getElementById("spotify-artist") as HTMLElement;
+  const panel = document.querySelector(".panel-spotify") as HTMLElement;
 
   if (!s) {
     if (lastTrackId !== null) {
@@ -170,14 +182,13 @@ function updateSpotify(d) {
 // -----------------------------
 // XBOX ACTIVITY PANEL
 // -----------------------------
-function updateXbox(d) {
-  const xbox = d.activities?.find((a) => a.name === "Xbox");
+function updateXbox(d: any) {
+  const xbox = d.activities?.find((a: any) => a.name === "Xbox");
 
-  const cover = document.getElementById("xbox-cover");
-  const title = document.getElementById("xbox-title");
-  const details = document.getElementById("xbox-details");
-  const panel = document.querySelector(".panel-xbox");
-  if (!cover || !title || !details || !panel) return;
+  const cover = document.getElementById("xbox-cover") as HTMLImageElement;
+  const title = document.getElementById("xbox-title") as HTMLElement;
+  const details = document.getElementById("xbox-details") as HTMLElement;
+  const panel = document.querySelector(".panel-xbox") as HTMLElement;
 
   if (!xbox) {
     if (lastXboxState !== null) {
@@ -210,83 +221,3 @@ function updateXbox(d) {
   logLine(`[Xbox] ${title.textContent}`);
   lastXboxState = stateKey;
 }
-
-// -----------------------------
-// AUDIO UNLOCK BUTTON
-// -----------------------------
-const unlockBtn = document.getElementById("music-unlock");
-
-if (unlockBtn) {
-  unlockBtn.onclick = () => {
-    const audio = document.getElementById("bg-audio");
-    if (!audio) return;
-
-    if (audio.muted || audio.paused) {
-      audio.muted = false;
-      audio.play().catch(() => {
-        logLine("[Audio] Playback blocked by browser");
-      });
-      unlockBtn.textContent = "MUTE BLOOD RUSH";
-      logLine("[Audio] Blood rush unmuted");
-    } else {
-      audio.muted = true;
-      audio.pause();
-      unlockBtn.textContent = "UNMUTE BLOOD RUSH";
-      logLine("[Audio] Blood rush muted");
-    }
-  };
-}
-
-// -----------------------------
-// BACKGROUND PARTICLE EFFECT
-// -----------------------------
-(function () {
-  const canvas = document.getElementById("bg-canvas");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  const parts = [];
-
-  function resize() {
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
-  }
-
-  resize();
-  addEventListener("resize", resize);
-
-  for (let i = 0; i < 70; i++) {
-    parts.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 0.25,
-      vy: -0.2 - Math.random() * 0.4,
-      r: 1 + Math.random() * 2
-    });
-  }
-
-  function tick() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    parts.forEach((p) => {
-      p.x += p.vx;
-      p.y += p.vy;
-
-      if (p.y < -10) {
-        p.y = canvas.height + 10;
-        p.x = Math.random() * canvas.width;
-      }
-
-      ctx.beginPath();
-      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3);
-      g.addColorStop(0, "rgba(255,43,43,0.8)");
-      g.addColorStop(1, "rgba(255,43,43,0)");
-      ctx.fillStyle = g;
-      ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
-      ctx.fill();
-    });
-
-    requestAnimationFrame(tick);
-  }
-
-  tick();
-})();
