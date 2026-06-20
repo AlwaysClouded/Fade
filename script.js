@@ -168,12 +168,22 @@ function fadeInSpotify() {
 }
 
 function updateSpotify(d: any) {
+  // Defensive checks
+  if (!d) {
+    logLine("[Spotify] No presence data");
+    return;
+  }
+
   const s = d.spotify;
   const cover = document.getElementById("spotify-cover") as HTMLImageElement;
   const title = document.getElementById("spotify-title") as HTMLElement;
   const artist = document.getElementById("spotify-artist") as HTMLElement;
   const panel = document.querySelector(".panel-spotify") as HTMLElement;
-  if (!cover || !title || !artist || !panel) return;
+  
+  if (!cover || !title || !artist || !panel) {
+    logLine("[Spotify] Missing DOM elements");
+    return;
+  }
 
   if (!s) {
     if (lastTrackId !== null) {
@@ -184,22 +194,28 @@ function updateSpotify(d: any) {
         artist.textContent = "";
         panel.classList.remove("active");
         fadeInSpotify();
-      }, 200); // slightly faster
+      }, 200);
       logLine("[Spotify] Idle");
       lastTrackId = null;
     }
     return;
   }
 
+  // Validate Spotify data structure
+  if (!s.track_id || !s.song || !s.artist || !s.album_art_url) {
+    logLine("[Spotify] Incomplete data from Lanyard");
+    return;
+  }
+
   if (s.track_id !== lastTrackId) {
     fadeOutSpotify();
     setTimeout(() => {
-      cover.src = s.album_art_url;
+      cover.src = s.album_art_url || "https://i.imgur.com/8QfQFfC.png";
       title.textContent = s.song;
       artist.textContent = s.artist;
       panel.classList.add("active");
       fadeInSpotify();
-    }, 200); // faster transition
+    }, 200);
     logLine(`[Spotify] ${s.song} — ${s.artist}`);
     lastTrackId = s.track_id;
   }
@@ -209,13 +225,22 @@ function updateSpotify(d: any) {
 // XBOX ACTIVITY PANEL
 // -----------------------------
 function updateXbox(d: any) {
-  const xbox = d.activities?.find((a: any) => a.name === "Xbox");
+  if (!d || !d.activities) {
+    logLine("[Xbox] No activities data");
+    return;
+  }
+
+  const xbox = d.activities.find((a: any) => a.name === "Xbox");
 
   const cover = document.getElementById("xbox-cover") as HTMLImageElement;
   const title = document.getElementById("xbox-title") as HTMLElement;
   const details = document.getElementById("xbox-details") as HTMLElement;
   const panel = document.querySelector(".panel-xbox") as HTMLElement;
-  if (!cover || !title || !details || !panel) return;
+  
+  if (!cover || !title || !details || !panel) {
+    logLine("[Xbox] Missing DOM elements");
+    return;
+  }
 
   if (!xbox) {
     if (lastXboxState !== null) {
@@ -236,10 +261,20 @@ function updateXbox(d: any) {
   title.textContent = xbox.state || "Playing on Xbox";
   details.textContent = xbox.details || "";
 
+  // Fixed image URL handling
   if (xbox.assets?.large_image) {
-    cover.src = xbox.assets.large_image.startsWith("mp:")
-  ? `https://media.discordapp.net/attachments/${xbox.assets.large_image.slice(3)}`
-  : "https://i.imgur.com/8QfQFfC.png";
+    const largeImage = xbox.assets.large_image;
+    
+    if (largeImage.startsWith("mp:")) {
+      // Discord media proxy format
+      cover.src = `https://media.discordapp.net/${largeImage.replace("mp:", "")}`;
+    } else if (largeImage.startsWith("http")) {
+      // Direct URL
+      cover.src = largeImage;
+    } else {
+      // Fallback
+      cover.src = "https://i.imgur.com/8QfQFfC.png";
+    }
   } else {
     cover.src = "https://i.imgur.com/8QfQFfC.png";
   }
