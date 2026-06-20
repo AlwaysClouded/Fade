@@ -345,7 +345,7 @@ body {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* UPDATED SPOTIFY PANEL BACKGROUND */
+/* SPOTIFY PANEL BACKGROUND */
 .panel-spotify {
   position: relative;
   background: url("0e6136ba-521d-4095-a20e-de9f597754d1.jpeg") center/cover no-repeat !important;
