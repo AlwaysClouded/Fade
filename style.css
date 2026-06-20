@@ -374,20 +374,11 @@ body {
 /* XBOX PANEL */
 .panel-xbox {
   position: relative;
-
-  /* REMOVE cover — it breaks vertical scaling */
-  background-image: url("f4de0028-4b7a-44b4-9533-c6a60bcf5b6c.jpeg");
-  background-repeat: no-repeat;
-
-  /* ⭐ FORCE VERTICAL FIT ⭐ */
-  background-size: auto 100% !important;
-  background-position: center center !important;
-
+  background: url("edited-photo.png") center/cover no-repeat !important;
   backdrop-filter: blur(0px) brightness(0.6) saturation(1.9) !important;
   -webkit-backdrop-filter: blur(0px) brightness(0.6) saturation(1.9) !important;
   overflow: hidden;
 }
-
 
 .panel-xbox::before {
   content: "";
