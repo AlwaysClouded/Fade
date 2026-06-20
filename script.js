@@ -14,17 +14,15 @@ function logLine(text) {
 }
 
 // -----------------------------
-// UNIFIED ENGINE STATE
+// ENGINE STATE
 // -----------------------------
-let lastDiscord = null;
-let lastSpotify = null;
-let pollRate = 12000; // adaptive
-let isSpotifyActive = false;
+let lastTrackId = null;
+let lastStatus = null;
 
 // -----------------------------
-// UNIFIED ENGINE LOOP
+// MAIN POLLER (EVERY 10 SECONDS)
 // -----------------------------
-async function presenceEngine() {
+async function pollLanyard() {
   try {
     const res = await fetch(
       `https://api.lanyard.rest/v1/users/${DISCORD_ID}?t=${Date.now()}`,
@@ -34,45 +32,25 @@ async function presenceEngine() {
     const json = await res.json();
     const d = json.data;
 
-    // --- DISCORD CHANGE DETECTION ---
-    if (JSON.stringify(d.discord_user) !== JSON.stringify(lastDiscord)) {
-      updateDiscord(d);
-      lastDiscord = structuredClone(d.discord_user);
-    }
+    updateDiscord(d);
+    updateSpotify(d);
 
-    // --- SPOTIFY CHANGE DETECTION ---
-    if (JSON.stringify(d.spotify) !== JSON.stringify(lastSpotify)) {
-      updateSpotify(d);
-      lastSpotify = structuredClone(d.spotify);
-    }
-
-    // --- ADAPTIVE POLLING ---
-    if (d.spotify) {
-      pollRate = 6000; // faster when music is playing
-      isSpotifyActive = true;
-    } else {
-      pollRate = 12000; // slower when idle
-      isSpotifyActive = false;
-    }
-
-    logLine(`[Engine] Updated (rate: ${pollRate / 1000}s)`);
-
+    logLine("[Lanyard] Polled successfully");
   } catch (err) {
-    logLine("[Engine] Fetch failed, retrying...");
-    pollRate = 8000; // fallback
+    logLine("[Lanyard] Poll failed");
   }
-
-  setTimeout(presenceEngine, pollRate);
 }
 
-presenceEngine();
+setInterval(pollLanyard, 10000);
+pollLanyard();
 
 // -----------------------------
-// DISCORD PANEL UPDATE
+// DISCORD UPDATE
 // -----------------------------
 function updateDiscord(d) {
   if (!d || !d.discord_user) return;
 
+  // Avatar
   const avatarEl = document.getElementById("dp-avatar");
   if (d.discord_user.avatar) {
     const ext = d.discord_user.avatar.startsWith("a_") ? "gif" : "png";
@@ -81,9 +59,11 @@ function updateDiscord(d) {
     avatarEl.src = "https://cdn.discordapp.com/embed/avatars/0.png";
   }
 
+  // Username
   document.getElementById("dp-username").textContent =
     d.discord_user.global_name || d.discord_user.username;
 
+  // Status
   const statusMap = {
     online: { color: "#43b581", text: "Online" },
     idle: { color: "#faa61a", text: "Idle" },
@@ -97,25 +77,28 @@ function updateDiscord(d) {
   document.getElementById("dp-status-dot").style.boxShadow = `0 0 8px ${s.color}`;
   document.getElementById("dp-status-text").textContent = s.text;
 
+  // Custom status
   const custom = d.activities?.find((a) => a.type === 4);
   document.getElementById("dp-custom-status").textContent =
     custom?.state || "No active custom status";
 
-  logLine(`[Discord] Status updated → ${s.text}`);
+  // Log only when status changes
+  if (lastStatus !== d.discord_status) {
+    logLine(`[Discord] Status → ${s.text}`);
+    lastStatus = d.discord_status;
+  }
 }
 
 // -----------------------------
-// SPOTIFY PANEL WITH SMOOTH TRANSITIONS
+// SPOTIFY UPDATE (STABLE VERSION)
 // -----------------------------
-let previousTrackId = null;
-
-function fadeOutElements() {
+function fadeOutSpotify() {
   document.getElementById("spotify-cover").classList.add("fade-out");
   document.getElementById("spotify-title").classList.add("fade-out");
   document.getElementById("spotify-artist").classList.add("fade-out");
 }
 
-function fadeInElements() {
+function fadeInSpotify() {
   document.getElementById("spotify-cover").classList.remove("fade-out");
   document.getElementById("spotify-title").classList.remove("fade-out");
   document.getElementById("spotify-artist").classList.remove("fade-out");
@@ -123,44 +106,42 @@ function fadeInElements() {
 
 function updateSpotify(d) {
   const s = d.spotify;
-function updateSpotify(d) {
-  const s = d.spotify;
   const cover = document.getElementById("spotify-cover");
   const title = document.getElementById("spotify-title");
   const artist = document.getElementById("spotify-artist");
   const panel = document.querySelector(".panel-spotify");
 
-  if (!cover || !title || !artist || !panel) return;
-
   // If Spotify is NOT playing
   if (!s) {
-    fadeOutElements();
-    setTimeout(() => {
-      cover.src = "https://i.imgur.com/8QfQFfC.png";
-      title.textContent = "Not playing anything";
-      artist.textContent = "";
-      panel.classList.remove("active");
-      fadeInElements();
-    }, 400);
+    if (lastTrackId !== null) {
+      fadeOutSpotify();
+      setTimeout(() => {
+        cover.src = "https://i.imgur.com/8QfQFfC.png";
+        title.textContent = "Not playing anything";
+        artist.textContent = "";
+        panel.classList.remove("active");
+        fadeInSpotify();
+      }, 400);
 
-    previousTrackId = null; // RESET so next track triggers
-    logLine("[Spotify] Idle (spotify: null)");
+      logLine("[Spotify] Idle");
+      lastTrackId = null;
+    }
     return;
   }
 
-  // If Spotify just started playing OR track changed
-  if (s.track_id !== previousTrackId) {
-    fadeOutElements();
+  // If track changed
+  if (s.track_id !== lastTrackId) {
+    fadeOutSpotify();
 
     setTimeout(() => {
       cover.src = s.album_art_url;
       title.textContent = s.song;
       artist.textContent = s.artist;
       panel.classList.add("active");
-      fadeInElements();
+      fadeInSpotify();
     }, 400);
 
-    logLine(`[Spotify] Now playing: ${s.song} — ${s.artist}`);
-    previousTrackId = s.track_id;
+    logLine(`[Spotify] ${s.song} — ${s.artist}`);
+    lastTrackId = s.track_id;
   }
 }
