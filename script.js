@@ -238,8 +238,8 @@ function updateXbox(d: any) {
 
   if (xbox.assets?.large_image) {
     cover.src = xbox.assets.large_image.startsWith("mp:")
-      ? `https://media.discordapp.net/${xbox.assets.large_image.replace("mp:", "")}`
-      : "https://i.imgur.com/8QfQFfC.png";
+  ? `https://media.discordapp.net/attachments/${xbox.assets.large_image.slice(3)}`
+  : "https://i.imgur.com/8QfQFfC.png";
   } else {
     cover.src = "https://i.imgur.com/8QfQFfC.png";
   }
