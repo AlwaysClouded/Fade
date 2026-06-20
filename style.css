@@ -374,7 +374,7 @@ body {
 /* XBOX PANEL */
 .panel-xbox {
   position: relative;
-  background: url("edited-photo.png") center/cover no-repeat !important;
+  background: url("edited-photo.jpeg") center/cover no-repeat !important;
   backdrop-filter: blur(0px) brightness(0.6) saturation(1.9) !important;
   -webkit-backdrop-filter: blur(0px) brightness(0.6) saturation(1.9) !important;
   overflow: hidden;
