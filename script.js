@@ -1,9 +1,10 @@
 const DISCORD_ID = "1360925264669966338";
 
-let ws;
-let lastStatus = null;
-let lastTrackId = null;
-let lastXboxState = null;
+let ws: WebSocket | null = null;
+let lastStatus: string | null = null;
+let lastTrackId: string | null = null;
+let lastXboxState: string | null = null;
+let lastPresenceAt = 0;
 
 // -----------------------------
 // LOGGING
@@ -19,14 +20,14 @@ function logLine(text: string) {
 }
 
 // -----------------------------
-// LANYARD WEBSOCKET
+// LANYARD WEBSOCKET (PRIMARY)
 // -----------------------------
 function connectLanyard() {
   ws = new WebSocket("wss://api.lanyard.rest/socket");
 
   ws.onopen = () => {
-    logLine("[Lanyard] Connected to gateway");
-    ws.send(
+    logLine("[Lanyard] WS connected");
+    ws?.send(
       JSON.stringify({
         op: 2,
         d: { subscribe_to_id: DISCORD_ID }
@@ -37,49 +38,76 @@ function connectLanyard() {
   ws.onmessage = (event) => {
     const packet = JSON.parse(event.data);
 
+    // heartbeat
     if (packet.op === 1) {
-      ws.send(JSON.stringify({ op: 3 }));
+      ws?.send(JSON.stringify({ op: 3 }));
       return;
     }
 
     if (packet.t === "INIT_STATE") {
       const d = packet.d[DISCORD_ID];
-      if (d) handlePresence(d, "[INIT]");
+      if (d) handlePresence(d, "[WS INIT]");
     } else if (packet.t === "PRESENCE_UPDATE") {
       const d = packet.d;
-      if (d) handlePresence(d, "[UPDATE]");
+      if (d) handlePresence(d, "[WS UPDATE]");
     }
   };
 
   ws.onclose = () => {
-    logLine("[Lanyard] Disconnected, retrying in 3s...");
+    logLine("[Lanyard] WS closed, retrying in 3s...");
+    ws = null;
     setTimeout(connectLanyard, 3000);
   };
 
   ws.onerror = () => {
-    logLine("[Lanyard] WebSocket error");
+    logLine("[Lanyard] WS error");
   };
 }
 
 connectLanyard();
 
 // -----------------------------
-// HANDLE PRESENCE + DEBUG LOGGING
+// FAST REST FALLBACK (EVERY 15s)
+// -----------------------------
+// If WS is slow / dropped / Discord lags, this keeps things feeling snappy.
+async function pollLanyardFallback() {
+  const now = Date.now();
+
+  // If we got a WS presence in last 10s, skip REST
+  if (now - lastPresenceAt < 10000) {
+    setTimeout(pollLanyardFallback, 15000);
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `https://api.lanyard.rest/v1/users/${DISCORD_ID}?t=${Date.now()}`,
+      { cache: "no-store" }
+    );
+    const json = await res.json();
+    if (json && json.data) {
+      handlePresence(json.data, "[REST]");
+    }
+  } catch {
+    logLine("[Lanyard] REST fallback failed");
+  }
+
+  setTimeout(pollLanyardFallback, 15000);
+}
+
+pollLanyardFallback();
+
+// -----------------------------
+// HANDLE PRESENCE
 // -----------------------------
 function handlePresence(d: any, tag: string) {
-  logLine(`${tag} Presence received`);
-
-  // ⭐ FULL DEBUG LOGGING ⭐
-  logLine("[DEBUG] Activities: " + JSON.stringify(d.activities || []));
-  logLine("[DEBUG] Spotify: " + JSON.stringify(d.spotify || null));
-  logLine("[DEBUG] Status: " + d.discord_status);
-  logLine("[DEBUG] Xbox: " + JSON.stringify(d.activities?.find((a: any) => a.name === "Xbox") || null));
+  lastPresenceAt = Date.now();
 
   updateDiscord(d);
   updateSpotify(d);
   updateXbox(d);
 
-  logLine(`${tag} Presence processed`);
+  logLine(`${tag} presence processed`);
 }
 
 // -----------------------------
@@ -99,7 +127,7 @@ function updateDiscord(d: any) {
   (document.getElementById("dp-username") as HTMLElement).textContent =
     d.discord_user.global_name || d.discord_user.username;
 
-  const statusMap: any = {
+  const statusMap: Record<string, { color: string; text: string }> = {
     online: { color: "#43b581", text: "Online" },
     idle: { color: "#faa61a", text: "Idle" },
     dnd: { color: "#f04747", text: "Do Not Disturb" },
@@ -145,6 +173,7 @@ function updateSpotify(d: any) {
   const title = document.getElementById("spotify-title") as HTMLElement;
   const artist = document.getElementById("spotify-artist") as HTMLElement;
   const panel = document.querySelector(".panel-spotify") as HTMLElement;
+  if (!cover || !title || !artist || !panel) return;
 
   if (!s) {
     if (lastTrackId !== null) {
@@ -155,8 +184,7 @@ function updateSpotify(d: any) {
         artist.textContent = "";
         panel.classList.remove("active");
         fadeInSpotify();
-      }, 400);
-
+      }, 200); // slightly faster
       logLine("[Spotify] Idle");
       lastTrackId = null;
     }
@@ -165,15 +193,13 @@ function updateSpotify(d: any) {
 
   if (s.track_id !== lastTrackId) {
     fadeOutSpotify();
-
     setTimeout(() => {
       cover.src = s.album_art_url;
       title.textContent = s.song;
       artist.textContent = s.artist;
       panel.classList.add("active");
       fadeInSpotify();
-    }, 400);
-
+    }, 200); // faster transition
     logLine(`[Spotify] ${s.song} — ${s.artist}`);
     lastTrackId = s.track_id;
   }
@@ -189,6 +215,7 @@ function updateXbox(d: any) {
   const title = document.getElementById("xbox-title") as HTMLElement;
   const details = document.getElementById("xbox-details") as HTMLElement;
   const panel = document.querySelector(".panel-xbox") as HTMLElement;
+  if (!cover || !title || !details || !panel) return;
 
   if (!xbox) {
     if (lastXboxState !== null) {
