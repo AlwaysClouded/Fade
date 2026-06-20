@@ -5,6 +5,8 @@ let lastStatus: string | null = null;
 let lastTrackId: string | null = null;
 let lastXboxState: string | null = null;
 let lastPresenceAt = 0;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
 
 // -----------------------------
 // LOGGING
@@ -23,10 +25,18 @@ function logLine(text: string) {
 // LANYARD WEBSOCKET (PRIMARY)
 // -----------------------------
 function connectLanyard() {
+  // Close any existing connection first
+  if (ws) {
+    ws.close();
+    ws = null;
+  }
+
+  logLine("[Lanyard] Attempting connection...");
   ws = new WebSocket("wss://api.lanyard.rest/socket");
 
   ws.onopen = () => {
-    logLine("[Lanyard] WS connected");
+    logLine("[Lanyard] WS connected ✓");
+    reconnectAttempts = 0;
     ws?.send(
       JSON.stringify({
         op: 2,
@@ -36,35 +46,68 @@ function connectLanyard() {
   };
 
   ws.onmessage = (event) => {
-    const packet = JSON.parse(event.data);
+    try {
+      const packet = JSON.parse(event.data);
 
-    // heartbeat
-    if (packet.op === 1) {
-      ws?.send(JSON.stringify({ op: 3 }));
-      return;
-    }
+      // heartbeat
+      if (packet.op === 1) {
+        ws?.send(JSON.stringify({ op: 3 }));
+        return;
+      }
 
-    if (packet.t === "INIT_STATE") {
-      const d = packet.d[DISCORD_ID];
-      if (d) handlePresence(d, "[WS INIT]");
-    } else if (packet.t === "PRESENCE_UPDATE") {
-      const d = packet.d;
-      if (d) handlePresence(d, "[WS UPDATE]");
+      if (packet.t === "INIT_STATE") {
+        const d = packet.d[DISCORD_ID];
+        if (d) handlePresence(d, "[WS INIT]");
+      } else if (packet.t === "PRESENCE_UPDATE") {
+        const d = packet.d;
+        if (d) handlePresence(d, "[WS UPDATE]");
+      }
+    } catch (err) {
+      logLine("[Lanyard] Parse error");
     }
   };
 
   ws.onclose = () => {
-    logLine("[Lanyard] WS closed, retrying in 3s...");
+    logLine("[Lanyard] WS closed");
     ws = null;
-    setTimeout(connectLanyard, 3000);
+    
+    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+      reconnectAttempts++;
+      const delay = Math.min(3000 * reconnectAttempts, 15000);
+      logLine(`[Lanyard] Retry ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${delay/1000}s`);
+      setTimeout(connectLanyard, delay);
+    } else {
+      logLine("[Lanyard] Max retries reached. Use refresh button.");
+    }
   };
 
-  ws.onerror = () => {
+  ws.onerror = (error) => {
     logLine("[Lanyard] WS error");
   };
 }
 
 connectLanyard();
+
+// Add manual reconnect button handler
+document.addEventListener("DOMContentLoaded", () => {
+  const refreshBtn = document.getElementById("lanyard-refresh");
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", () => {
+      logLine("[Lanyard] Manual reconnect requested");
+      reconnectAttempts = 0;
+      connectLanyard();
+    });
+  }
+});
+
+// Also support reconnect via keyboard shortcut (Ctrl+Shift+R)
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey && e.shiftKey && e.key === "R") {
+    logLine("[Lanyard] Keyboard reconnect");
+    reconnectAttempts = 0;
+    connectLanyard();
+  }
+});
 
 // -----------------------------
 // FAST REST FALLBACK (EVERY 15s)
