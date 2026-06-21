@@ -1,203 +1,84 @@
-const DISCORD_ID = "1360925264669966338";
+// ===============================
+// CONFIG
+// ===============================
+const API_URL = "https://jester-presence-api.onrender.com/api/presence";
 
-let ws: WebSocket | null = null;
-let lastStatus: string | null = null;
-let lastTrackId: string | null = null;
-let lastXboxState: string | null = null;
-let lastPresenceAt = 0;
-let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 5;
+let lastTrackId = null;
+let lastXboxState = null;
 
-// -----------------------------
+// ===============================
 // LOGGING
-// -----------------------------
-function logLine(text: string) {
+// ===============================
+function logLine(text) {
   const log = document.getElementById("log-output");
   if (!log) return;
+
   const span = document.createElement("span");
   span.className = "log-line";
   span.textContent = text;
+
   log.appendChild(span);
   while (log.children.length > 5) log.removeChild(log.firstChild);
 }
 
-// -----------------------------
-// LANYARD WEBSOCKET (PRIMARY)
-// -----------------------------
-function connectLanyard() {
-  // Close any existing connection first
-  if (ws) {
-    ws.close();
-    ws = null;
-  }
-
-  logLine("[Lanyard] Attempting connection...");
-  ws = new WebSocket("wss://api.lanyard.rest/socket");
-
-  ws.onopen = () => {
-    logLine("[Lanyard] WS connected ✓");
-    reconnectAttempts = 0;
-    ws?.send(
-      JSON.stringify({
-        op: 2,
-        d: { subscribe_to_id: DISCORD_ID }
-      })
-    );
-  };
-
-  ws.onmessage = (event) => {
-    try {
-      const packet = JSON.parse(event.data);
-
-      // heartbeat
-      if (packet.op === 1) {
-        ws?.send(JSON.stringify({ op: 3 }));
-        return;
-      }
-
-      if (packet.t === "INIT_STATE") {
-        const d = packet.d[DISCORD_ID];
-        if (d) handlePresence(d, "[WS INIT]");
-      } else if (packet.t === "PRESENCE_UPDATE") {
-        const d = packet.d;
-        if (d) handlePresence(d, "[WS UPDATE]");
-      }
-    } catch (err) {
-      logLine("[Lanyard] Parse error");
-    }
-  };
-
-  ws.onclose = () => {
-    logLine("[Lanyard] WS closed");
-    ws = null;
-    
-    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-      reconnectAttempts++;
-      const delay = Math.min(3000 * reconnectAttempts, 15000);
-      logLine(`[Lanyard] Retry ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${delay/1000}s`);
-      setTimeout(connectLanyard, delay);
-    } else {
-      logLine("[Lanyard] Max retries reached. Use refresh button.");
-    }
-  };
-
-  ws.onerror = (error) => {
-    logLine("[Lanyard] WS error");
-  };
-}
-
-connectLanyard();
-
-// Add manual reconnect button handler
-document.addEventListener("DOMContentLoaded", () => {
-  const refreshBtn = document.getElementById("lanyard-refresh");
-  if (refreshBtn) {
-    refreshBtn.addEventListener("click", () => {
-      logLine("[Lanyard] Manual reconnect requested");
-      reconnectAttempts = 0;
-      connectLanyard();
-    });
-  }
-});
-
-// Also support reconnect via keyboard shortcut (Ctrl+Shift+R)
-document.addEventListener("keydown", (e) => {
-  if (e.ctrlKey && e.shiftKey && e.key === "R") {
-    logLine("[Lanyard] Keyboard reconnect");
-    reconnectAttempts = 0;
-    connectLanyard();
-  }
-});
-
-// -----------------------------
-// FAST REST FALLBACK (EVERY 15s)
-// -----------------------------
-// If WS is slow / dropped / Discord lags, this keeps things feeling snappy.
-async function pollLanyardFallback() {
-  const now = Date.now();
-
-  // If we got a WS presence in last 10s, skip REST
-  if (now - lastPresenceAt < 10000) {
-    setTimeout(pollLanyardFallback, 15000);
-    return;
-  }
-
+// ===============================
+// FETCH PRESENCE LOOP
+// ===============================
+async function fetchPresence() {
   try {
-    const res = await fetch(
-      `https://api.lanyard.rest/v1/users/${DISCORD_ID}?t=${Date.now()}`,
-      { cache: "no-store" }
-    );
+    const res = await fetch(API_URL + "?t=" + Date.now(), { cache: "no-store" });
     const json = await res.json();
-    if (json && json.data) {
-      handlePresence(json.data, "[REST]");
+
+    if (!json.success || !json.presence) {
+      logLine("[API] No presence data");
+      return;
     }
-  } catch {
-    logLine("[Lanyard] REST fallback failed");
-  }
 
-  setTimeout(pollLanyardFallback, 15000);
+    const p = json.presence;
+
+    updateDiscord(p);
+    updateSpotify(p.spotify);
+    updateXbox(p.xbox);
+
+    logLine("[API] Presence updated");
+
+  } catch (err) {
+    logLine("[API] Fetch error");
+  }
 }
 
-pollLanyardFallback();
+setInterval(fetchPresence, 5000);
+fetchPresence();
 
-// -----------------------------
-// HANDLE PRESENCE
-// -----------------------------
-function handlePresence(d: any, tag: string) {
-  lastPresenceAt = Date.now();
-
-  updateDiscord(d);
-  updateSpotify(d);
-  updateXbox(d);
-
-  logLine(`${tag} presence processed`);
-}
-
-// -----------------------------
-// DISCORD UPDATE
-// -----------------------------
-function updateDiscord(d: any) {
-  if (!d || !d.discord_user) return;
-
-  const avatarEl = document.getElementById("dp-avatar") as HTMLImageElement;
-  if (d.discord_user.avatar) {
-    const ext = d.discord_user.avatar.startsWith("a_") ? "gif" : "png";
-    avatarEl.src = `https://cdn.discordapp.com/avatars/${d.discord_user.id}/${d.discord_user.avatar}.${ext}?size=128`;
-  } else {
-    avatarEl.src = "https://cdn.discordapp.com/embed/avatars/0.png";
-  }
-
-  (document.getElementById("dp-username") as HTMLElement).textContent =
-    d.discord_user.global_name || d.discord_user.username;
-
-  const statusMap: Record<string, { color: string; text: string }> = {
+// ===============================
+// DISCORD PANEL
+// ===============================
+function updateDiscord(p) {
+  const statusMap = {
     online: { color: "#43b581", text: "Online" },
     idle: { color: "#faa61a", text: "Idle" },
     dnd: { color: "#f04747", text: "Do Not Disturb" },
     offline: { color: "#747f8d", text: "Offline" }
   };
 
-  const s = statusMap[d.discord_status] || statusMap.offline;
+  const s = statusMap[p.status] || statusMap.offline;
 
-  const dot = document.getElementById("dp-status-dot") as HTMLElement;
-  dot.style.background = s.color;
-  dot.style.boxShadow = `0 0 8px ${s.color}`;
+  const dot = document.getElementById("dp-status-dot");
+  const text = document.getElementById("dp-status-text");
+  const custom = document.getElementById("dp-custom-status");
 
-  (document.getElementById("dp-status-text") as HTMLElement).textContent = s.text;
-
-  const custom = d.activities?.find((a: any) => a.type === 4);
-  (document.getElementById("dp-custom-status") as HTMLElement).textContent =
-    custom?.state || "No active custom status";
-
-  if (lastStatus !== d.discord_status) {
-    logLine(`[Discord] Status → ${s.text}`);
-    lastStatus = d.discord_status;
+  if (dot) {
+    dot.style.background = s.color;
+    dot.style.boxShadow = `0 0 8px ${s.color}`;
   }
+
+  if (text) text.textContent = s.text;
+  if (custom) custom.textContent = p.customStatus || "No custom status";
 }
 
-// -----------------------------
-// SPOTIFY WITH SMOOTH TRANSITIONS
-// -----------------------------
+// ===============================
+// SPOTIFY PANEL
+// ===============================
 function fadeOutSpotify() {
   document.getElementById("spotify-cover")?.classList.add("fade-out");
   document.getElementById("spotify-title")?.classList.add("fade-out");
@@ -210,25 +91,15 @@ function fadeInSpotify() {
   document.getElementById("spotify-artist")?.classList.remove("fade-out");
 }
 
-function updateSpotify(d: any) {
-  // Defensive checks
-  if (!d) {
-    logLine("[Spotify] No presence data");
-    return;
-  }
+function updateSpotify(spotify) {
+  const cover = document.getElementById("spotify-cover");
+  const title = document.getElementById("spotify-title");
+  const artist = document.getElementById("spotify-artist");
+  const panel = document.querySelector(".panel-spotify");
 
-  const s = d.spotify;
-  const cover = document.getElementById("spotify-cover") as HTMLImageElement;
-  const title = document.getElementById("spotify-title") as HTMLElement;
-  const artist = document.getElementById("spotify-artist") as HTMLElement;
-  const panel = document.querySelector(".panel-spotify") as HTMLElement;
-  
-  if (!cover || !title || !artist || !panel) {
-    logLine("[Spotify] Missing DOM elements");
-    return;
-  }
+  if (!cover || !title || !artist || !panel) return;
 
-  if (!s) {
+  if (!spotify) {
     if (lastTrackId !== null) {
       fadeOutSpotify();
       setTimeout(() => {
@@ -238,52 +109,39 @@ function updateSpotify(d: any) {
         panel.classList.remove("active");
         fadeInSpotify();
       }, 200);
-      logLine("[Spotify] Idle");
       lastTrackId = null;
+      logLine("[Spotify] Idle");
     }
     return;
   }
 
-  // Validate Spotify data structure
-  if (!s.track_id || !s.song || !s.artist || !s.album_art_url) {
-    logLine("[Spotify] Incomplete data from Lanyard");
-    return;
-  }
+  const trackId = spotify.song + spotify.artist;
 
-  if (s.track_id !== lastTrackId) {
+  if (trackId !== lastTrackId) {
     fadeOutSpotify();
     setTimeout(() => {
-      cover.src = s.album_art_url || "https://i.imgur.com/8QfQFfC.png";
-      title.textContent = s.song;
-      artist.textContent = s.artist;
+      cover.src = spotify.albumArt || "https://i.imgur.com/8QfQFfC.png";
+      title.textContent = spotify.song;
+      artist.textContent = spotify.artist;
       panel.classList.add("active");
       fadeInSpotify();
     }, 200);
-    logLine(`[Spotify] ${s.song} — ${s.artist}`);
-    lastTrackId = s.track_id;
+
+    logLine(`[Spotify] ${spotify.song} — ${spotify.artist}`);
+    lastTrackId = trackId;
   }
 }
 
-// -----------------------------
-// XBOX ACTIVITY PANEL
-// -----------------------------
-function updateXbox(d: any) {
-  if (!d || !d.activities) {
-    logLine("[Xbox] No activities data");
-    return;
-  }
+// ===============================
+// XBOX PANEL
+// ===============================
+function updateXbox(xbox) {
+  const cover = document.getElementById("xbox-cover");
+  const title = document.getElementById("xbox-title");
+  const details = document.getElementById("xbox-details");
+  const panel = document.querySelector(".panel-xbox");
 
-  const xbox = d.activities.find((a: any) => a.name === "Xbox");
-
-  const cover = document.getElementById("xbox-cover") as HTMLImageElement;
-  const title = document.getElementById("xbox-title") as HTMLElement;
-  const details = document.getElementById("xbox-details") as HTMLElement;
-  const panel = document.querySelector(".panel-xbox") as HTMLElement;
-  
-  if (!cover || !title || !details || !panel) {
-    logLine("[Xbox] Missing DOM elements");
-    return;
-  }
+  if (!cover || !title || !details || !panel) return;
 
   if (!xbox) {
     if (lastXboxState !== null) {
@@ -291,38 +149,23 @@ function updateXbox(d: any) {
       details.textContent = "";
       cover.src = "https://i.imgur.com/8QfQFfC.png";
       panel.classList.remove("active");
-      logLine("[Xbox] Idle");
       lastXboxState = null;
+      logLine("[Xbox] Idle");
     }
     return;
   }
 
-  const stateKey =
-    (xbox.details || "") + (xbox.state || "") + (xbox.assets?.large_image || "");
+  const stateKey = (xbox.game || "") + (xbox.state || "") + (xbox.cover || "");
+
   if (stateKey === lastXboxState) return;
 
-  title.textContent = xbox.state || "Playing on Xbox";
-  details.textContent = xbox.details || "";
+  title.textContent = xbox.game || "Playing on Xbox";
+  details.textContent = xbox.state || "";
 
-  // Fixed image URL handling
-  if (xbox.assets?.large_image) {
-    const largeImage = xbox.assets.large_image;
-    
-    if (largeImage.startsWith("mp:")) {
-      // Discord media proxy format
-      cover.src = `https://media.discordapp.net/${largeImage.replace("mp:", "")}`;
-    } else if (largeImage.startsWith("http")) {
-      // Direct URL
-      cover.src = largeImage;
-    } else {
-      // Fallback
-      cover.src = "https://i.imgur.com/8QfQFfC.png";
-    }
-  } else {
-    cover.src = "https://i.imgur.com/8QfQFfC.png";
-  }
+  cover.src = xbox.cover || "https://i.imgur.com/8QfQFfC.png";
 
   panel.classList.add("active");
-  logLine(`[Xbox] ${title.textContent}`);
   lastXboxState = stateKey;
+
+  logLine(`[Xbox] ${title.textContent}`);
 }
