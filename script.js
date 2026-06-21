@@ -1,7 +1,7 @@
 // ===============================
 // CONFIG
 // ===============================
-const API_URL = "https://jester-presence-api.onrender.com/api/presence";
+const API_URL = "https://your-render-url.onrender.com/api/presence";
 
 let lastTrackId = null;
 let lastXboxState = null;
@@ -66,6 +66,8 @@ function updateDiscord(p) {
   const dot = document.getElementById("dp-status-dot");
   const text = document.getElementById("dp-status-text");
   const custom = document.getElementById("dp-custom-status");
+  const avatar = document.getElementById("dp-avatar");
+  const username = document.getElementById("dp-username");
 
   if (dot) {
     dot.style.background = s.color;
@@ -74,6 +76,9 @@ function updateDiscord(p) {
 
   if (text) text.textContent = s.text;
   if (custom) custom.textContent = p.customStatus || "No custom status";
+
+  if (avatar && p.avatar) avatar.src = p.avatar;
+  if (username && p.username) username.textContent = p.username;
 }
 
 // ===============================
