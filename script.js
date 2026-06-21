@@ -1,7 +1,7 @@
 // ===============================
 // CONFIG
 // ===============================
-const API_URL = "https://your-render-url.onrender.com/api/presence";
+const API_URL = "https://jester-presence-api.onrender.com/api/presence";
 
 let lastTrackId = null;
 let lastXboxState = null;
