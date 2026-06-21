@@ -161,7 +161,6 @@ function updateXbox(xbox) {
 
   title.textContent = xbox.game || "Playing on Xbox";
   details.textContent = xbox.state || "";
-
   cover.src = xbox.cover || "https://i.imgur.com/8QfQFfC.png";
 
   panel.classList.add("active");
