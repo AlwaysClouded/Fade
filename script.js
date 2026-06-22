@@ -120,7 +120,6 @@ function updateSpotify(spotify) {
     return;
   }
 
-  // ⭐ NEW API FORMAT
   const song = spotify.details || "Unknown Track";
   const artistName = spotify.state || "Unknown Artist";
 
@@ -192,3 +191,36 @@ function updateXbox(xbox) {
 
   logLine(`[Xbox] ${game}`);
 }
+
+// ===============================
+// BLOOD RUSH MUSIC CONTROLLER
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("music-unlock");
+  const audio = document.getElementById("bg-audio");
+
+  if (!btn || !audio) {
+    console.error("[BloodRush] Missing button or audio element");
+    return;
+  }
+
+  audio.muted = true;
+
+  btn.addEventListener("click", async () => {
+    try {
+      if (audio.paused || audio.muted) {
+        audio.muted = false;
+        await audio.play();
+        btn.textContent = "MUTE BLOOD RUSH";
+        console.log("[BloodRush] Playing");
+      } else {
+        audio.pause();
+        audio.muted = true;
+        btn.textContent = "UNMUTE BLOOD RUSH";
+        console.log("[BloodRush] Muted");
+      }
+    } catch (err) {
+      console.error("[BloodRush] Play blocked:", err);
+    }
+  });
+});
