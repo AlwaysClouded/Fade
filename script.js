@@ -47,7 +47,7 @@ async function fetchPresence() {
   }
 }
 
-setInterval(fetchPresence, 5000);
+setInterval(fetchPresence, 5005);
 fetchPresence();
 
 // ===============================
@@ -120,19 +120,29 @@ function updateSpotify(spotify) {
     return;
   }
 
-  const trackId = spotify.song + spotify.artist;
+  // ⭐ NEW API FORMAT
+  const song = spotify.details || "Unknown Track";
+  const artistName = spotify.state || "Unknown Artist";
+
+  let albumArt = null;
+  if (spotify.assets?.largeImage?.startsWith("spotify:")) {
+    const id = spotify.assets.largeImage.replace("spotify:", "");
+    albumArt = `https://i.scdn.co/image/${id}`;
+  }
+
+  const trackId = song + artistName;
 
   if (trackId !== lastTrackId) {
     fadeOutSpotify();
     setTimeout(() => {
-      cover.src = spotify.albumArt || "https://i.imgur.com/8QfQFfC.png";
-      title.textContent = spotify.song;
-      artist.textContent = spotify.artist;
+      cover.src = albumArt || "https://i.imgur.com/8QfQFfC.png";
+      title.textContent = song;
+      artist.textContent = artistName;
       panel.classList.add("active");
       fadeInSpotify();
     }, 200);
 
-    logLine(`[Spotify] ${spotify.song} — ${spotify.artist}`);
+    logLine(`[Spotify] ${song} — ${artistName}`);
     lastTrackId = trackId;
   }
 }
@@ -160,16 +170,25 @@ function updateXbox(xbox) {
     return;
   }
 
-  const stateKey = (xbox.game || "") + (xbox.state || "") + (xbox.cover || "");
+  const game = xbox.name || "Playing on Xbox";
+  const state = xbox.details || "";
+
+  let coverUrl = null;
+  if (xbox.assets?.largeImage?.startsWith("xbox:")) {
+    const id = xbox.assets.largeImage.replace("xbox:", "");
+    coverUrl = `https://images-eds.xboxlive.com/image?url=${id}`;
+  }
+
+  const stateKey = game + state + coverUrl;
 
   if (stateKey === lastXboxState) return;
 
-  title.textContent = xbox.game || "Playing on Xbox";
-  details.textContent = xbox.state || "";
-  cover.src = xbox.cover || "https://i.imgur.com/8QfQFfC.png";
+  title.textContent = game;
+  details.textContent = state;
+  cover.src = coverUrl || "https://i.imgur.com/8QfQFfC.png";
 
   panel.classList.add("active");
   lastXboxState = stateKey;
 
-  logLine(`[Xbox] ${title.textContent}`);
+  logLine(`[Xbox] ${game}`);
 }
