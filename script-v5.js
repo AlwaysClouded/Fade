@@ -8,6 +8,7 @@ const API_URL = `https://jester-presence-api.onrender.com/api/presence?user=${US
 let lastTrackId = null;
 let lastXboxState = null;
 let gameTimerInterval = null;
+let spotifyInterval = null;
 
 // ===============================
 // GAME LOGO DATABASE
@@ -36,10 +37,10 @@ function getGameLogo(gameName, activity) {
   );
   if (key) return GAME_LOGOS[key];
 
-  if (activity.applicationId?.startsWith("xbox"))
+  if (activity?.applicationId?.startsWith?.("xbox"))
     return "https://i.imgur.com/1uXKp8y.png";
 
-  if (activity.applicationId?.startsWith("ps"))
+  if (activity?.applicationId?.startsWith?.("ps"))
     return "https://i.imgur.com/3j1Yx0X.png";
 
   return "https://i.imgur.com/8QfQFfC.png";
@@ -92,7 +93,6 @@ async function fetchPresence() {
     updateXbox(p.xbox || p.game || null);
 
     logLine("[API] Presence updated");
-
   } catch (err) {
     logLine("[API] Fetch error");
   }
@@ -114,40 +114,110 @@ function updateDiscord(p) {
 
   const s = statusMap[p.status] || statusMap.offline;
 
-  document.getElementById("dp-status-dot").style.background = s.color;
-  document.getElementById("dp-status-text").textContent = s.text;
-  document.getElementById("dp-custom-status").textContent = p.customStatus || "No custom status";
-  document.getElementById("dp-avatar").src = p.avatar;
-  document.getElementById("dp-username").textContent = p.username;
+  const dot = document.getElementById("dp-status-dot");
+  const text = document.getElementById("dp-status-text");
+  const custom = document.getElementById("dp-custom-status");
+  const avatar = document.getElementById("dp-avatar");
+  const username = document.getElementById("dp-username");
+
+  if (dot) {
+    dot.style.background = s.color;
+    dot.style.boxShadow = `0 0 8px ${s.color}`;
+  }
+
+  if (text) text.textContent = s.text;
+  if (custom) custom.textContent = p.customStatus || "No custom status";
+
+  if (avatar && p.avatar) avatar.src = p.avatar;
+  if (username && p.username) username.textContent = p.username;
 }
 
 // ===============================
-// SPOTIFY PANEL
+// SPOTIFY PANEL (WITH PROGRESS)
 // ===============================
+function formatTime(ms) {
+  const total = Math.floor(ms / 1000);
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function truncate(text, max = 32) {
+  return text && text.length > max ? text.slice(0, max) + "…" : text || "";
+}
+
 function updateSpotify(spotify) {
   const cover = document.getElementById("spotify-cover");
   const title = document.getElementById("spotify-title");
   const artist = document.getElementById("spotify-artist");
   const panel = document.querySelector(".panel-spotify");
 
+  const elapsedEl = document.getElementById("spotify-elapsed");
+  const durationEl = document.getElementById("spotify-duration");
+  const barFill = document.getElementById("spotify-bar-fill");
+
+  if (!cover || !title || !artist || !panel || !elapsedEl || !durationEl || !barFill) return;
+
   if (!spotify) {
     panel.classList.remove("active");
+    if (spotifyInterval) clearInterval(spotifyInterval);
+    cover.src = "https://i.imgur.com/8QfQFfC.png";
+    title.textContent = "Not playing anything";
+    artist.textContent = "";
+    elapsedEl.textContent = "0:00";
+    durationEl.textContent = "0:00";
+    barFill.style.width = "0%";
+    lastTrackId = null;
+    logLine("[Spotify] Idle");
     return;
   }
 
+  const song = spotify.details || "";
+  const artistName = spotify.state || "";
   const albumArt = spotify.assets?.largeImage
     ? `https://i.scdn.co/image/${spotify.assets.largeImage.replace("spotify:", "")}`
     : "https://i.imgur.com/8QfQFfC.png";
 
-  cover.src = albumArt;
-  title.textContent = spotify.details;
-  artist.textContent = spotify.state;
+  const trackId = song + artistName;
 
-  panel.classList.add("active");
+  const start = spotify.timestamps?.start ? Number(spotify.timestamps.start) : null;
+  const end = spotify.timestamps?.end ? Number(spotify.timestamps.end) : null;
+
+  if (trackId !== lastTrackId) {
+    cover.src = albumArt;
+    title.textContent = truncate(song, 32);
+    artist.textContent = truncate(artistName, 32);
+    panel.classList.add("active");
+    lastTrackId = trackId;
+    logLine(`[Spotify] ${song} — ${artistName}`);
+  }
+
+  if (spotifyInterval) clearInterval(spotifyInterval);
+
+  if (!start || !end) {
+    elapsedEl.textContent = "0:00";
+    durationEl.textContent = "0:00";
+    barFill.style.width = "0%";
+    return;
+  }
+
+  const duration = end - start;
+  durationEl.textContent = formatTime(duration);
+
+  spotifyInterval = setInterval(() => {
+    const now = Date.now();
+    const elapsed = now - start;
+    const clamped = Math.max(0, Math.min(duration, elapsed));
+
+    elapsedEl.textContent = formatTime(clamped);
+
+    const progress = Math.min(1, clamped / duration);
+    barFill.style.width = `${progress * 100}%`;
+  }, 1000);
 }
 
 // ===============================
-// GAME PANEL (FINAL VERSION)
+// XBOX / GAME PANEL (WITH LOGO + TIME)
 // ===============================
 function updateXbox(activity) {
   const cover = document.getElementById("xbox-cover");
@@ -157,23 +227,32 @@ function updateXbox(activity) {
   const icon = document.getElementById("xbox-icon");
   const timePlayed = document.getElementById("xbox-time");
 
+  if (!cover || !title || !details || !panel || !icon || !timePlayed) return;
+
   if (!activity) {
-    panel.classList.remove("active");
-    if (gameTimerInterval) clearInterval(gameTimerInterval);
+    if (lastXboxState !== null) {
+      title.textContent = "Not playing";
+      details.textContent = "";
+      cover.src = "https://i.imgur.com/8QfQFfC.png";
+      icon.src = "https://i.imgur.com/8QfQFfC.png";
+      timePlayed.textContent = "";
+      panel.classList.remove("active");
+      lastXboxState = null;
+      if (gameTimerInterval) clearInterval(gameTimerInterval);
+      logLine("[Game] Idle");
+    }
     return;
   }
 
-  const game = activity.name;
+  const game = activity.name || "Playing";
   const state = activity.details || activity.state || "";
   const coverUrl = activity.cover || "https://i.imgur.com/8QfQFfC.png";
 
   const stateKey = game + state;
   if (stateKey === lastXboxState) return;
 
-  // 🎮 REAL GAME LOGO OR CONSOLE FALLBACK
   icon.src = getGameLogo(game, activity);
 
-  // ⏱️ TIME PLAYED
   if (gameTimerInterval) clearInterval(gameTimerInterval);
 
   const start = activity.timestamps?.start
@@ -190,6 +269,8 @@ function updateXbox(activity) {
 
       timePlayed.textContent = `${mins}m ${secs}s`;
     }, 1000);
+  } else {
+    timePlayed.textContent = "";
   }
 
   title.textContent = game;
