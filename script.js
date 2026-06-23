@@ -26,14 +26,13 @@ function logLine(text) {
 // LAZY-TRACKING FETCH
 // ===============================
 async function fetchPresenceLazy() {
-  // First request (marks user as tracked)
   let res = await fetch(API_URL + "&t=" + Date.now(), { cache: "no-store" });
   let json = await res.json();
 
-  // If presence is null, wait for worker force-fetch
+  // Only retry if presence object itself is missing
   if (!json.presence) {
     logLine("[API] Waiting for worker...");
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 1200));
 
     res = await fetch(API_URL + "&t=" + Date.now(), { cache: "no-store" });
     json = await res.json();
