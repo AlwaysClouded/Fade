@@ -2,13 +2,48 @@
 // CONFIG
 // ===============================
 const USER_ID = "1360925264669966338";
-
-// Cachebuster ensures GitHub Pages NEVER caches the API response
 const API_URL = `https://jester-presence-api.onrender.com/api/presence?user=${USER_ID}&nocache=`;
 
 // Track last states
 let lastTrackId = null;
 let lastXboxState = null;
+let gameTimerInterval = null;
+
+// ===============================
+// GAME LOGO DATABASE
+// ===============================
+const GAME_LOGOS = {
+  "Fortnite": "https://i.imgur.com/0ZQ9Q0X.png",
+  "Apex Legends": "https://i.imgur.com/7x0yY8M.png",
+  "Grand Theft Auto V": "https://i.imgur.com/8e4Q0mX.png",
+  "Minecraft": "https://i.imgur.com/8n4z0Qp.png",
+  "Call of Duty": "https://i.imgur.com/4yQ0m0P.png",
+  "Valorant": "https://i.imgur.com/1Q0m8yX.png",
+  "Rocket League": "https://i.imgur.com/5Q0m8yX.png",
+  "Roblox": "https://i.imgur.com/6Q0m8yX.png"
+};
+
+// ===============================
+// GAME LOGO RESOLVER
+// ===============================
+function getGameLogo(gameName, activity) {
+  if (!gameName) return "https://i.imgur.com/8QfQFfC.png";
+
+  if (GAME_LOGOS[gameName]) return GAME_LOGOS[gameName];
+
+  const key = Object.keys(GAME_LOGOS).find(k =>
+    gameName.toLowerCase().includes(k.toLowerCase())
+  );
+  if (key) return GAME_LOGOS[key];
+
+  if (activity.applicationId?.startsWith("xbox"))
+    return "https://i.imgur.com/1uXKp8y.png";
+
+  if (activity.applicationId?.startsWith("ps"))
+    return "https://i.imgur.com/3j1Yx0X.png";
+
+  return "https://i.imgur.com/8QfQFfC.png";
+}
 
 // ===============================
 // LOGGING
@@ -26,7 +61,7 @@ function logLine(text) {
 }
 
 // ===============================
-// LAZY-TRACKING FETCH
+// FETCH PRESENCE
 // ===============================
 async function fetchPresenceLazy() {
   let res = await fetch(API_URL + Date.now(), { cache: "no-store" });
@@ -43,9 +78,6 @@ async function fetchPresenceLazy() {
   return json.presence || null;
 }
 
-// ===============================
-// FETCH PRESENCE LOOP
-// ===============================
 async function fetchPresence() {
   try {
     const p = await fetchPresenceLazy();
@@ -82,117 +114,83 @@ function updateDiscord(p) {
 
   const s = statusMap[p.status] || statusMap.offline;
 
-  const dot = document.getElementById("dp-status-dot");
-  const text = document.getElementById("dp-status-text");
-  const custom = document.getElementById("dp-custom-status");
-  const avatar = document.getElementById("dp-avatar");
-  const username = document.getElementById("dp-username");
-
-  if (dot) {
-    dot.style.background = s.color;
-    dot.style.boxShadow = `0 0 8px ${s.color}`;
-  }
-
-  if (text) text.textContent = s.text;
-  if (custom) custom.textContent = p.customStatus || "No custom status";
-
-  if (avatar && p.avatar) avatar.src = p.avatar;
-  if (username && p.username) username.textContent = p.username;
+  document.getElementById("dp-status-dot").style.background = s.color;
+  document.getElementById("dp-status-text").textContent = s.text;
+  document.getElementById("dp-custom-status").textContent = p.customStatus || "No custom status";
+  document.getElementById("dp-avatar").src = p.avatar;
+  document.getElementById("dp-username").textContent = p.username;
 }
 
 // ===============================
-// SPOTIFY PANEL (FIXED VERSION)
+// SPOTIFY PANEL
 // ===============================
-function fadeOutSpotify() {
-  document.getElementById("spotify-cover")?.classList.add("fade-out");
-  document.getElementById("spotify-title")?.classList.add("fade-out");
-  document.getElementById("spotify-artist")?.classList.add("fade-out");
-}
-
-function fadeInSpotify() {
-  document.getElementById("spotify-cover")?.classList.remove("fade-out");
-  document.getElementById("spotify-title")?.classList.remove("fade-out");
-  document.getElementById("spotify-artist")?.classList.remove("fade-out");
-}
-
 function updateSpotify(spotify) {
   const cover = document.getElementById("spotify-cover");
   const title = document.getElementById("spotify-title");
   const artist = document.getElementById("spotify-artist");
   const panel = document.querySelector(".panel-spotify");
 
-  if (!cover || !title || !artist || !panel) return;
-
   if (!spotify) {
-    if (lastTrackId !== null) {
-      fadeOutSpotify();
-      setTimeout(() => {
-        cover.src = "https://i.imgur.com/8QfQFfC.png";
-        title.textContent = "Not playing anything";
-        artist.textContent = "";
-        panel.classList.remove("active");
-        fadeInSpotify();
-      }, 200);
-      lastTrackId = null;
-      logLine("[Spotify] Idle");
-    }
+    panel.classList.remove("active");
     return;
   }
 
-  const song = spotify.details;
-  const artistName = spotify.state;
   const albumArt = spotify.assets?.largeImage
     ? `https://i.scdn.co/image/${spotify.assets.largeImage.replace("spotify:", "")}`
     : "https://i.imgur.com/8QfQFfC.png";
 
-  const trackId = song + artistName;
+  cover.src = albumArt;
+  title.textContent = spotify.details;
+  artist.textContent = spotify.state;
 
-  if (trackId !== lastTrackId) {
-    fadeOutSpotify();
-    setTimeout(() => {
-      cover.src = albumArt;
-      title.textContent = song;
-      artist.textContent = artistName;
-      panel.classList.add("active");
-      fadeInSpotify();
-    }, 200);
-
-    logLine(`[Spotify] ${song} — ${artistName}`);
-    lastTrackId = trackId;
-  }
+  panel.classList.add("active");
 }
 
 // ===============================
-// XBOX / GAME PANEL (PATCHED)
+// GAME PANEL (FINAL VERSION)
 // ===============================
 function updateXbox(activity) {
   const cover = document.getElementById("xbox-cover");
   const title = document.getElementById("xbox-title");
   const details = document.getElementById("xbox-details");
   const panel = document.querySelector(".panel-xbox");
-
-  if (!cover || !title || !details || !panel) return;
+  const icon = document.getElementById("xbox-icon");
+  const timePlayed = document.getElementById("xbox-time");
 
   if (!activity) {
-    if (lastXboxState !== null) {
-      title.textContent = "Not playing";
-      details.textContent = "";
-      cover.src = "https://i.imgur.com/8QfQFfC.png";
-      panel.classList.remove("active");
-      lastXboxState = null;
-      logLine("[Game] Idle");
-    }
+    panel.classList.remove("active");
+    if (gameTimerInterval) clearInterval(gameTimerInterval);
     return;
   }
 
-  const game = activity.name || "Playing";
+  const game = activity.name;
   const state = activity.details || activity.state || "";
   const coverUrl = activity.cover || "https://i.imgur.com/8QfQFfC.png";
 
-  // ⭐ PATCH: Ignore timestamps so Fortnite updates correctly
   const stateKey = game + state;
-
   if (stateKey === lastXboxState) return;
+
+  // 🎮 REAL GAME LOGO OR CONSOLE FALLBACK
+  icon.src = getGameLogo(game, activity);
+
+  // ⏱️ TIME PLAYED
+  if (gameTimerInterval) clearInterval(gameTimerInterval);
+
+  const start = activity.timestamps?.start
+    ? new Date(activity.timestamps.start)
+    : null;
+
+  if (start) {
+    gameTimerInterval = setInterval(() => {
+      const now = new Date();
+      const diff = now - start;
+
+      const mins = Math.floor(diff / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+
+      timePlayed.textContent = `${mins}m ${secs}s`;
+    }, 1000);
+  }
 
   title.textContent = game;
   details.textContent = state;
