@@ -1,14 +1,9 @@
 // ===============================
-// DEBUG: CONFIRM SCRIPT LOADED
-// ===============================
-document.getElementById("spotify-title").textContent = "SCRIPT LOADED";
-
-// ===============================
 // CONFIG
 // ===============================
 const USER_ID = "1360925264669966338";
 
-// ⭐ Cachebuster ensures GitHub Pages NEVER caches the API response
+// Cachebuster ensures GitHub Pages NEVER caches the API response
 const API_URL = `https://jester-presence-api.onrender.com/api/presence?user=${USER_ID}&nocache=`;
 
 // Track last states
@@ -60,10 +55,6 @@ async function fetchPresence() {
       return;
     }
 
-    // ⭐ DEBUG: SHOW EXACT SPOTIFY OBJECT ON SCREEN
-    document.getElementById("spotify-title").textContent =
-      "SPOTIFY RAW: " + JSON.stringify(p.spotify);
-
     updateDiscord(p);
     updateSpotify(p.spotify);
     updateXbox(p.xbox || p.game || null);
@@ -110,7 +101,7 @@ function updateDiscord(p) {
 }
 
 // ===============================
-// SPOTIFY PANEL
+// SPOTIFY PANEL (FIXED VERSION)
 // ===============================
 function fadeOutSpotify() {
   document.getElementById("spotify-cover")?.classList.add("fade-out");
@@ -148,16 +139,19 @@ function updateSpotify(spotify) {
     return;
   }
 
-  const song = spotify.song;
-  const artistName = spotify.artist;
-  const albumArt = spotify.albumArt;
+  // ⭐ FIXED: Use the REAL fields from your API
+  const song = spotify.details;
+  const artistName = spotify.state;
+  const albumArt = spotify.assets?.largeImage
+    ? `https://i.scdn.co/image/${spotify.assets.largeImage.replace("spotify:", "")}`
+    : "https://i.imgur.com/8QfQFfC.png";
 
   const trackId = song + artistName;
 
   if (trackId !== lastTrackId) {
     fadeOutSpotify();
     setTimeout(() => {
-      cover.src = albumArt || "https://i.imgur.com/8QfQFfC.png";
+      cover.src = albumArt;
       title.textContent = song;
       artist.textContent = artistName;
       panel.classList.add("active");
@@ -217,10 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("music-unlock");
   const audio = document.getElementById("bg-audio");
 
-  if (!btn || !audio) {
-    console.error("[BloodRush] Missing button or audio element");
-    return;
-  }
+  if (!btn || !audio) return;
 
   audio.muted = true;
 
