@@ -139,7 +139,6 @@ function updateSpotify(spotify) {
     return;
   }
 
-  // ⭐ FIXED: Use the REAL fields from your API
   const song = spotify.details;
   const artistName = spotify.state;
   const albumArt = spotify.assets?.largeImage
@@ -164,7 +163,7 @@ function updateSpotify(spotify) {
 }
 
 // ===============================
-// XBOX / GAME PANEL
+// XBOX / GAME PANEL (PATCHED)
 // ===============================
 function updateXbox(activity) {
   const cover = document.getElementById("xbox-cover");
@@ -190,7 +189,8 @@ function updateXbox(activity) {
   const state = activity.details || activity.state || "";
   const coverUrl = activity.cover || "https://i.imgur.com/8QfQFfC.png";
 
-  const stateKey = game + state + coverUrl;
+  // ⭐ PATCH: Ignore timestamps so Fortnite updates correctly
+  const stateKey = game + state;
 
   if (stateKey === lastXboxState) return;
 
