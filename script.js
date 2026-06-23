@@ -162,7 +162,7 @@ function fadeInSpotify() {
 // ===============================
 // XBOX / GAME PANEL
 // ===============================
-function updateXbox(xbox) {
+function updateXbox(activity) {
   const cover = document.getElementById("xbox-cover");
   const title = document.getElementById("xbox-title");
   const details = document.getElementById("xbox-details");
@@ -170,36 +170,17 @@ function updateXbox(xbox) {
 
   if (!cover || !title || !details || !panel) return;
 
-  if (!xbox) {
+  if (!activity) {
     if (lastXboxState !== null) {
-      title.textContent = "Not playing on Xbox";
+      title.textContent = "Not playing";
       details.textContent = "";
       cover.src = "https://i.imgur.com/8QfQFfC.png";
       panel.classList.remove("active");
       lastXboxState = null;
-      logLine("[Xbox] Idle");
+      logLine("[Game] Idle");
     }
     return;
   }
-
-  const game = xbox.name || "Playing on Xbox";
-  const state = xbox.details || xbox.state || "";
-
-  const coverUrl = xbox.cover || "https://i.imgur.com/8QfQFfC.png";
-
-  const stateKey = game + state + coverUrl;
-
-  if (stateKey === lastXboxState) return;
-
-  title.textContent = game;
-  details.textContent = state;
-  cover.src = coverUrl;
-
-  panel.classList.add("active");
-  lastXboxState = stateKey;
-
-  logLine(`[Xbox] ${game}`);
-}
 
   const game = activity.name || "Playing";
   const state = activity.details || "";
