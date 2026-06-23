@@ -30,16 +30,16 @@ async function fetchPresenceLazy() {
   let res = await fetch(API_URL + "&t=" + Date.now(), { cache: "no-store" });
   let json = await res.json();
 
-  if (!json.presence) {
+  // If presence is null, wait for worker force-fetch
+  if (!json.presence || !json.presence[USER_ID]) {
     logLine("[API] Waiting for worker...");
     await new Promise(r => setTimeout(r, 1500));
 
-    // Second request (worker force-fetch should have updated)
     res = await fetch(API_URL + "&t=" + Date.now(), { cache: "no-store" });
     json = await res.json();
   }
 
-  return json.presence;
+  return json.presence ? json.presence[USER_ID] : null;
 }
 
 // ===============================
@@ -102,6 +102,18 @@ function updateDiscord(p) {
 // ===============================
 // SPOTIFY PANEL
 // ===============================
+function fadeOutSpotify() {
+  document.getElementById("spotify-cover")?.classList.add("fade-out");
+  document.getElementById("spotify-title")?.classList.add("fade-out");
+  document.getElementById("spotify-artist")?.classList.add("fade-out");
+}
+
+function fadeInSpotify() {
+  document.getElementById("spotify-cover")?.classList.remove("fade-out");
+  document.getElementById("spotify-title")?.classList.remove("fade-out");
+  document.getElementById("spotify-artist")?.classList.remove("fade-out");
+}
+
 function updateSpotify(spotify) {
   const cover = document.getElementById("spotify-cover");
   const title = document.getElementById("spotify-title");
@@ -147,18 +159,6 @@ function updateSpotify(spotify) {
   }
 }
 
-function fadeOutSpotify() {
-  document.getElementById("spotify-cover")?.classList.add("fade-out");
-  document.getElementById("spotify-title")?.classList.add("fade-out");
-  document.getElementById("spotify-artist")?.classList.add("fade-out");
-}
-
-function fadeInSpotify() {
-  document.getElementById("spotify-cover")?.classList.remove("fade-out");
-  document.getElementById("spotify-title")?.classList.remove("fade-out");
-  document.getElementById("spotify-artist")?.classList.remove("fade-out");
-}
-
 // ===============================
 // XBOX / GAME PANEL
 // ===============================
@@ -183,8 +183,7 @@ function updateXbox(activity) {
   }
 
   const game = activity.name || "Playing";
-  const state = activity.details || "";
-
+  const state = activity.details || activity.state || "";
   const coverUrl = activity.cover || "https://i.imgur.com/8QfQFfC.png";
 
   const stateKey = game + state + coverUrl;
@@ -200,3 +199,36 @@ function updateXbox(activity) {
 
   logLine(`[Game] ${game}`);
 }
+
+// ===============================
+// BLOOD RUSH MUSIC CONTROLLER
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("music-unlock");
+  const audio = document.getElementById("bg-audio");
+
+  if (!btn || !audio) {
+    console.error("[BloodRush] Missing button or audio element");
+    return;
+  }
+
+  audio.muted = true;
+
+  btn.addEventListener("click", async () => {
+    try {
+      if (audio.paused || audio.muted) {
+        audio.muted = false;
+        await audio.play();
+        btn.textContent = "MUTE BLOOD RUSH";
+        console.log("[BloodRush] Playing");
+      } else {
+        audio.pause();
+        audio.muted = true;
+        btn.textContent = "UNMUTE BLOOD RUSH";
+        console.log("[BloodRush] Muted");
+      }
+    } catch (err) {
+      console.error("[BloodRush] Play blocked:", err);
+    }
+  });
+});
