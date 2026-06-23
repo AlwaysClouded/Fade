@@ -10,9 +10,7 @@ let lastXboxState = null;
 let gameTimerInterval = null;
 let spotifyInterval = null;
 
-// ===============================
-// GAME LOGO DATABASE
-// ===============================
+// Game logos
 const GAME_LOGOS = {
   "Fortnite": "https://i.imgur.com/0ZQ9Q0X.png",
   "Apex Legends": "https://i.imgur.com/7x0yY8M.png",
@@ -24,9 +22,6 @@ const GAME_LOGOS = {
   "Roblox": "https://i.imgur.com/6Q0m8yX.png"
 };
 
-// ===============================
-// GAME LOGO RESOLVER
-// ===============================
 function getGameLogo(gameName, activity) {
   if (!gameName) return "https://i.imgur.com/8QfQFfC.png";
 
@@ -90,7 +85,7 @@ async function fetchPresence() {
 
     updateDiscord(p);
     updateSpotify(p.spotify);
-    updateXbox(p.xbox || p.game || null);
+    updateGame(p.xbox || p.game || null);
 
     logLine("[API] Presence updated");
   } catch (err) {
@@ -133,7 +128,7 @@ function updateDiscord(p) {
 }
 
 // ===============================
-// SPOTIFY PANEL (WITH PROGRESS)
+// SPOTIFY PANEL (AUTO-HIDE BAR)
 // ===============================
 function formatTime(ms) {
   const total = Math.floor(ms / 1000);
@@ -150,23 +145,24 @@ function updateSpotify(spotify) {
   const cover = document.getElementById("spotify-cover");
   const title = document.getElementById("spotify-title");
   const artist = document.getElementById("spotify-artist");
-  const panel = document.querySelector(".panel-spotify");
+  const panel = document.querySelector(".card-spotify");
 
   const elapsedEl = document.getElementById("spotify-elapsed");
   const durationEl = document.getElementById("spotify-duration");
   const barFill = document.getElementById("spotify-bar-fill");
+  const progressWrap = document.querySelector(".spotify-progress");
 
-  if (!cover || !title || !artist || !panel || !elapsedEl || !durationEl || !barFill) return;
+  if (!cover || !title || !artist || !panel || !elapsedEl || !durationEl || !barFill || !progressWrap) return;
 
   if (!spotify) {
     panel.classList.remove("active");
     if (spotifyInterval) clearInterval(spotifyInterval);
+
     cover.src = "https://i.imgur.com/8QfQFfC.png";
     title.textContent = "Not playing anything";
     artist.textContent = "";
-    elapsedEl.textContent = "0:00";
-    durationEl.textContent = "0:00";
-    barFill.style.width = "0%";
+
+    progressWrap.style.display = "none";
     lastTrackId = null;
     logLine("[Spotify] Idle");
     return;
@@ -180,9 +176,6 @@ function updateSpotify(spotify) {
 
   const trackId = song + artistName;
 
-  const start = spotify.timestamps?.start ? Number(spotify.timestamps.start) : null;
-  const end = spotify.timestamps?.end ? Number(spotify.timestamps.end) : null;
-
   if (trackId !== lastTrackId) {
     cover.src = albumArt;
     title.textContent = truncate(song, 32);
@@ -194,12 +187,15 @@ function updateSpotify(spotify) {
 
   if (spotifyInterval) clearInterval(spotifyInterval);
 
+  const start = spotify.timestamps?.start ? Number(spotify.timestamps.start) : null;
+  const end = spotify.timestamps?.end ? Number(spotify.timestamps.end) : null;
+
   if (!start || !end) {
-    elapsedEl.textContent = "0:00";
-    durationEl.textContent = "0:00";
-    barFill.style.width = "0%";
+    progressWrap.style.display = "none";
     return;
   }
+
+  progressWrap.style.display = "flex";
 
   const duration = end - start;
   durationEl.textContent = formatTime(duration);
@@ -217,17 +213,18 @@ function updateSpotify(spotify) {
 }
 
 // ===============================
-// XBOX / GAME PANEL (WITH LOGO + TIME)
+// GAME PANEL
 // ===============================
-function updateXbox(activity) {
+function updateGame(activity) {
   const cover = document.getElementById("xbox-cover");
   const title = document.getElementById("xbox-title");
   const details = document.getElementById("xbox-details");
-  const panel = document.querySelector(".panel-xbox");
+  const panel = document.querySelector(".card-game");
   const icon = document.getElementById("xbox-icon");
   const timePlayed = document.getElementById("xbox-time");
+  const platformPill = document.getElementById("xbox-platform");
 
-  if (!cover || !title || !details || !panel || !icon || !timePlayed) return;
+  if (!cover || !title || !details || !panel || !icon || !timePlayed || !platformPill) return;
 
   if (!activity) {
     if (lastXboxState !== null) {
@@ -236,6 +233,7 @@ function updateXbox(activity) {
       cover.src = "https://i.imgur.com/8QfQFfC.png";
       icon.src = "https://i.imgur.com/8QfQFfC.png";
       timePlayed.textContent = "";
+      platformPill.textContent = "IDLE";
       panel.classList.remove("active");
       lastXboxState = null;
       if (gameTimerInterval) clearInterval(gameTimerInterval);
@@ -252,6 +250,14 @@ function updateXbox(activity) {
   if (stateKey === lastXboxState) return;
 
   icon.src = getGameLogo(game, activity);
+
+  if (activity.applicationId?.startsWith?.("xbox")) {
+    platformPill.textContent = "XBOX";
+  } else if (activity.applicationId?.startsWith?.("ps")) {
+    platformPill.textContent = "PLAYSTATION";
+  } else {
+    platformPill.textContent = "PC";
+  }
 
   if (gameTimerInterval) clearInterval(gameTimerInterval);
 
@@ -284,7 +290,7 @@ function updateXbox(activity) {
 }
 
 // ===============================
-// BLOOD RUSH MUSIC CONTROLLER
+// MUSIC TOGGLE
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("music-unlock");
@@ -299,14 +305,14 @@ document.addEventListener("DOMContentLoaded", () => {
       if (audio.paused || audio.muted) {
         audio.muted = false;
         await audio.play();
-        btn.textContent = "MUTE BLOOD RUSH";
+        btn.textContent = "MUTE TRACK";
       } else {
         audio.pause();
         audio.muted = true;
-        btn.textContent = "UNMUTE BLOOD RUSH";
+        btn.textContent = "UNMUTE TRACK";
       }
     } catch (err) {
-      console.error("[BloodRush] Play blocked:", err);
+      console.error("[Audio] Play blocked:", err);
     }
   });
 });
