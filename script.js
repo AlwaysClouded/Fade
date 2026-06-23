@@ -31,7 +31,7 @@ async function fetchPresenceLazy() {
   let json = await res.json();
 
   // If presence is null, wait for worker force-fetch
-  if (!json.presence || !json.presence[USER_ID]) {
+  if (!json.presence) {
     logLine("[API] Waiting for worker...");
     await new Promise(r => setTimeout(r, 1500));
 
@@ -39,7 +39,7 @@ async function fetchPresenceLazy() {
     json = await res.json();
   }
 
-  return json.presence ? json.presence[USER_ID] : null;
+  return json.presence || null;
 }
 
 // ===============================
