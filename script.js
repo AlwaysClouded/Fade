@@ -1,7 +1,8 @@
 // ===============================
 // CONFIG
 // ===============================
-const API_URL = "https://jester-presence-api.onrender.com/api/presence";
+const USER_ID = "1360925264669966338"; // YOUR ID
+const API_URL = `https://jester-presence-api.onrender.com/api/presence?user=${USER_ID}`;
 
 let lastTrackId = null;
 let lastXboxState = null;
@@ -22,23 +23,40 @@ function logLine(text) {
 }
 
 // ===============================
+// LAZY-TRACKING FETCH
+// ===============================
+async function fetchPresenceLazy() {
+  // First request (marks user as tracked)
+  let res = await fetch(API_URL + "&t=" + Date.now(), { cache: "no-store" });
+  let json = await res.json();
+
+  if (!json.presence) {
+    logLine("[API] Waiting for worker...");
+    await new Promise(r => setTimeout(r, 1500));
+
+    // Second request (worker force-fetch should have updated)
+    res = await fetch(API_URL + "&t=" + Date.now(), { cache: "no-store" });
+    json = await res.json();
+  }
+
+  return json.presence;
+}
+
+// ===============================
 // FETCH PRESENCE LOOP
 // ===============================
 async function fetchPresence() {
   try {
-    const res = await fetch(API_URL + "?t=" + Date.now(), { cache: "no-store" });
-    const json = await res.json();
+    const p = await fetchPresenceLazy();
 
-    if (!json.success || !json.presence) {
+    if (!p) {
       logLine("[API] No presence data");
       return;
     }
 
-    const p = json.presence;
-
     updateDiscord(p);
     updateSpotify(p.spotify);
-    updateXbox(p.xbox);
+    updateXbox(p.xbox || p.game || null);
 
     logLine("[API] Presence updated");
 
@@ -47,7 +65,7 @@ async function fetchPresence() {
   }
 }
 
-setInterval(fetchPresence, 5005);
+setInterval(fetchPresence, 5000);
 fetchPresence();
 
 // ===============================
@@ -84,18 +102,6 @@ function updateDiscord(p) {
 // ===============================
 // SPOTIFY PANEL
 // ===============================
-function fadeOutSpotify() {
-  document.getElementById("spotify-cover")?.classList.add("fade-out");
-  document.getElementById("spotify-title")?.classList.add("fade-out");
-  document.getElementById("spotify-artist")?.classList.add("fade-out");
-}
-
-function fadeInSpotify() {
-  document.getElementById("spotify-cover")?.classList.remove("fade-out");
-  document.getElementById("spotify-title")?.classList.remove("fade-out");
-  document.getElementById("spotify-artist")?.classList.remove("fade-out");
-}
-
 function updateSpotify(spotify) {
   const cover = document.getElementById("spotify-cover");
   const title = document.getElementById("spotify-title");
@@ -120,14 +126,9 @@ function updateSpotify(spotify) {
     return;
   }
 
-  const song = spotify.details || "Unknown Track";
-  const artistName = spotify.state || "Unknown Artist";
-
-  let albumArt = null;
-  if (spotify.assets?.largeImage?.startsWith("spotify:")) {
-    const id = spotify.assets.largeImage.replace("spotify:", "");
-    albumArt = `https://i.scdn.co/image/${id}`;
-  }
+  const song = spotify.song;
+  const artistName = spotify.artist;
+  const albumArt = spotify.albumArt;
 
   const trackId = song + artistName;
 
@@ -146,10 +147,22 @@ function updateSpotify(spotify) {
   }
 }
 
+function fadeOutSpotify() {
+  document.getElementById("spotify-cover")?.classList.add("fade-out");
+  document.getElementById("spotify-title")?.classList.add("fade-out");
+  document.getElementById("spotify-artist")?.classList.add("fade-out");
+}
+
+function fadeInSpotify() {
+  document.getElementById("spotify-cover")?.classList.remove("fade-out");
+  document.getElementById("spotify-title")?.classList.remove("fade-out");
+  document.getElementById("spotify-artist")?.classList.remove("fade-out");
+}
+
 // ===============================
-// XBOX PANEL
+// XBOX / GAME PANEL
 // ===============================
-function updateXbox(xbox) {
+function updateXbox(activity) {
   const cover = document.getElementById("xbox-cover");
   const title = document.getElementById("xbox-title");
   const details = document.getElementById("xbox-details");
@@ -157,26 +170,22 @@ function updateXbox(xbox) {
 
   if (!cover || !title || !details || !panel) return;
 
-  if (!xbox) {
+  if (!activity) {
     if (lastXboxState !== null) {
-      title.textContent = "Not playing on Xbox";
+      title.textContent = "Not playing";
       details.textContent = "";
       cover.src = "https://i.imgur.com/8QfQFfC.png";
       panel.classList.remove("active");
       lastXboxState = null;
-      logLine("[Xbox] Idle");
+      logLine("[Game] Idle");
     }
     return;
   }
 
-  const game = xbox.name || "Playing on Xbox";
-  const state = xbox.details || "";
+  const game = activity.name || "Playing";
+  const state = activity.details || "";
 
-  let coverUrl = null;
-  if (xbox.assets?.largeImage?.startsWith("xbox:")) {
-    const id = xbox.assets.largeImage.replace("xbox:", "");
-    coverUrl = `https://images-eds.xboxlive.com/image?url=${id}`;
-  }
+  const coverUrl = activity.cover || "https://i.imgur.com/8QfQFfC.png";
 
   const stateKey = game + state + coverUrl;
 
@@ -184,43 +193,10 @@ function updateXbox(xbox) {
 
   title.textContent = game;
   details.textContent = state;
-  cover.src = coverUrl || "https://i.imgur.com/8QfQFfC.png";
+  cover.src = coverUrl;
 
   panel.classList.add("active");
   lastXboxState = stateKey;
 
-  logLine(`[Xbox] ${game}`);
+  logLine(`[Game] ${game}`);
 }
-
-// ===============================
-// BLOOD RUSH MUSIC CONTROLLER
-// ===============================
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("music-unlock");
-  const audio = document.getElementById("bg-audio");
-
-  if (!btn || !audio) {
-    console.error("[BloodRush] Missing button or audio element");
-    return;
-  }
-
-  audio.muted = true;
-
-  btn.addEventListener("click", async () => {
-    try {
-      if (audio.paused || audio.muted) {
-        audio.muted = false;
-        await audio.play();
-        btn.textContent = "MUTE BLOOD RUSH";
-        console.log("[BloodRush] Playing");
-      } else {
-        audio.pause();
-        audio.muted = true;
-        btn.textContent = "UNMUTE BLOOD RUSH";
-        console.log("[BloodRush] Muted");
-      }
-    } catch (err) {
-      console.error("[BloodRush] Play blocked:", err);
-    }
-  });
-});
