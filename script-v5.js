@@ -1,3 +1,5 @@
+document.getElementById("spotify-title").textContent = "SCRIPT LOADED";
+
 // ===============================
 // CONFIG
 // ===============================
