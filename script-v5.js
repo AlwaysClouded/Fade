@@ -1,11 +1,17 @@
+// ===============================
+// DEBUG: CONFIRM SCRIPT LOADED
+// ===============================
 document.getElementById("spotify-title").textContent = "SCRIPT LOADED";
 
 // ===============================
 // CONFIG
 // ===============================
-const USER_ID = "1360925264669966338"; // YOUR ID
-const API_URL = `https://jester-presence-api.onrender.com/api/presence?user=${USER_ID}`;
+const USER_ID = "1360925264669966338";
 
+// ⭐ Cachebuster ensures GitHub Pages NEVER caches the API response
+const API_URL = `https://jester-presence-api.onrender.com/api/presence?user=${USER_ID}&nocache=`;
+
+// Track last states
 let lastTrackId = null;
 let lastXboxState = null;
 
@@ -28,15 +34,14 @@ function logLine(text) {
 // LAZY-TRACKING FETCH
 // ===============================
 async function fetchPresenceLazy() {
-  let res = await fetch(API_URL + "&t=" + Date.now(), { cache: "no-store" });
+  let res = await fetch(API_URL + Date.now(), { cache: "no-store" });
   let json = await res.json();
 
-  // Only retry if presence object itself is missing
   if (!json.presence) {
     logLine("[API] Waiting for worker...");
     await new Promise(r => setTimeout(r, 1200));
 
-    res = await fetch(API_URL + "&t=" + Date.now(), { cache: "no-store" });
+    res = await fetch(API_URL + Date.now(), { cache: "no-store" });
     json = await res.json();
   }
 
@@ -54,6 +59,10 @@ async function fetchPresence() {
       logLine("[API] No presence data");
       return;
     }
+
+    // ⭐ DEBUG: SHOW EXACT SPOTIFY OBJECT ON SCREEN
+    document.getElementById("spotify-title").textContent =
+      "SPOTIFY RAW: " + JSON.stringify(p.spotify);
 
     updateDiscord(p);
     updateSpotify(p.spotify);
@@ -221,12 +230,10 @@ document.addEventListener("DOMContentLoaded", () => {
         audio.muted = false;
         await audio.play();
         btn.textContent = "MUTE BLOOD RUSH";
-        console.log("[BloodRush] Playing");
       } else {
         audio.pause();
         audio.muted = true;
         btn.textContent = "UNMUTE BLOOD RUSH";
-        console.log("[BloodRush] Muted");
       }
     } catch (err) {
       console.error("[BloodRush] Play blocked:", err);
