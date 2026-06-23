@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <div class="bg">
     <canvas id="bg-canvas"></canvas>
@@ -90,22 +91,37 @@
           </div>
         </div>
 
-        <!-- XBOX PANEL -->
+        <!-- ⭐ GAME PANEL (UPDATED) -->
         <div class="panel panel-xbox">
           <div class="panel-orbit"></div>
           <div class="panel-slash"></div>
 
           <div class="panel-header">
-            <span class="panel-label">XBOX ACTIVITY</span>
+            <span class="panel-label">GAME ACTIVITY</span>
           </div>
 
           <div class="panel-body xbox-body">
+
+            <!-- Game Cover -->
             <div class="xbox-cover-wrap">
               <img id="xbox-cover" src="https://i.imgur.com/8QfQFfC.png" />
             </div>
+
+            <!-- Game Info -->
             <div class="xbox-meta">
-              <div id="xbox-title" class="xbox-title">Not playing on Xbox</div>
+
+              <!-- Game Title + Logo -->
+              <div class="game-header">
+                <img id="xbox-icon" class="game-icon" src="https://i.imgur.com/8QfQFfC.png" />
+                <div id="xbox-title" class="xbox-title">Not playing</div>
+              </div>
+
+              <!-- Game Details -->
               <div id="xbox-details" class="xbox-details"></div>
+
+              <!-- Time Played -->
+              <div id="xbox-time" class="xbox-time"></div>
+
             </div>
           </div>
         </div>
@@ -131,7 +147,7 @@
     </footer>
   </main>
 
-  <!-- ⭐ IMPORTANT: Cache‑buster so new script loads -->
+  <!-- ⭐ IMPORTANT: Loads your presence logic -->
   <script src="script-v5.js"></script>
 </body>
 </html>
