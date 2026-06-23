@@ -14,14 +14,13 @@
     <div class="bg-embers"></div>
   </div>
 
-  <!-- ⭐ BLOOD RUSH AUDIO -->
+  <!-- BLOOD RUSH AUDIO -->
   <audio id="bg-audio" src="Kenshi Yonezu - IRIS OUT.mp3" loop muted></audio>
 
   <main class="shell">
     <header class="top-bar">
       <div class="logo-glitch" data-text="ATREYU">Clouded</div>
 
-      <!-- ⭐ MUTE / UNMUTE BUTTON -->
       <button id="music-unlock" class="btn-outline">UNMUTE BLOOD RUSH</button>
     </header>
 
@@ -87,11 +86,19 @@
             <div class="spotify-meta">
               <div id="spotify-title" class="spotify-title">Not playing anything</div>
               <div id="spotify-artist" class="spotify-artist"></div>
+
+              <div class="spotify-progress">
+                <span id="spotify-elapsed">0:00</span>
+                <div class="spotify-bar">
+                  <div id="spotify-bar-fill"></div>
+                </div>
+                <span id="spotify-duration">0:00</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- ⭐ GAME PANEL (UPDATED) -->
+        <!-- GAME PANEL -->
         <div class="panel panel-xbox">
           <div class="panel-orbit"></div>
           <div class="panel-slash"></div>
@@ -101,27 +108,18 @@
           </div>
 
           <div class="panel-body xbox-body">
-
-            <!-- Game Cover -->
             <div class="xbox-cover-wrap">
               <img id="xbox-cover" src="https://i.imgur.com/8QfQFfC.png" />
             </div>
 
-            <!-- Game Info -->
             <div class="xbox-meta">
-
-              <!-- Game Title + Logo -->
               <div class="game-header">
                 <img id="xbox-icon" class="game-icon" src="https://i.imgur.com/8QfQFfC.png" />
                 <div id="xbox-title" class="xbox-title">Not playing</div>
               </div>
 
-              <!-- Game Details -->
               <div id="xbox-details" class="xbox-details"></div>
-
-              <!-- Time Played -->
               <div id="xbox-time" class="xbox-time"></div>
-
             </div>
           </div>
         </div>
@@ -147,7 +145,6 @@
     </footer>
   </main>
 
-  <!-- ⭐ IMPORTANT: Loads your presence logic -->
   <script src="script-v5.js"></script>
 </body>
 </html>
