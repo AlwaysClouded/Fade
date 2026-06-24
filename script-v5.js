@@ -34,10 +34,10 @@ function getGameLogo(activity) {
   }
 
   // Xbox fallback
-  if (activity.flags === 1) return "https://i.imgur.com/1uXKp8y.png";
+  if (activity.platform === "XBOX") return "https://i.imgur.com/1uXKp8y.png";
 
   // PlayStation fallback
-  if (name.includes("ps") || name.includes("playstation"))
+  if (activity.platform === "PLAYSTATION")
     return "https://i.imgur.com/3j1Yx0X.png";
 
   return "https://i.imgur.com/8QfQFfC.png";
@@ -189,29 +189,14 @@ function updateSpotify(spotify) {
 }
 
 // ===============================
-// GAME PANEL (FIXED)
+// GAME PANEL (SYNCED WITH WORKER)
 // ===============================
 function getRealActivity(p) {
-  if (!p.activities) return null;
-
-  // Prefer actual games (type 0)
-  const game = p.activities.find(a => a.type === 0);
-  if (game) return game;
-
-  // Fallback to any non-custom activity
-  return p.activities.find(a => a.type !== 4) || null;
-}
-
-function detectPlatform(activity) {
-  if (!activity) return "IDLE";
-
-  const name = activity.name.toLowerCase();
-
-  if (activity.flags === 1) return "XBOX";
-  if (name.includes("ps") || name.includes("playstation")) return "PLAYSTATION";
-  if (activity.applicationId) return "PC";
-
-  return "APP";
+  // Priority: Xbox → PlayStation → PC game
+  if (p.xbox) return p.xbox;
+  if (p.playstation) return p.playstation;
+  if (p.game) return p.game;
+  return null;
 }
 
 function updateGame(activity) {
@@ -242,9 +227,12 @@ function updateGame(activity) {
 
   title.textContent = activity.name;
   details.textContent = activity.details || activity.state || "";
-  cover.src = activity.cover || "https://i.imgur.com/8QfQFfC.png";
+  cover.src = activity.assets?.largeImage
+    ? `https://media.discordapp.net/${activity.assets.largeImage.replace("mp:", "")}`
+    : "https://i.imgur.com/8QfQFfC.png";
+
   icon.src = getGameLogo(activity);
-  platformPill.textContent = detectPlatform(activity);
+  platformPill.textContent = activity.platform || "APP";
 
   if (activityTimerInterval) clearInterval(activityTimerInterval);
 
