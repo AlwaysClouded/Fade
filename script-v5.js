@@ -25,12 +25,12 @@ const GAME_LOGOS = {
 };
 
 const PLATFORM_ICONS = {
-  xbox: ICON_BASE + "xbox.png",
-  playstation: ICON_BASE + "playstation.png"
+  xbox: "https://jester-presence-api.onrender.com/icons/xbox.png",
+  playstation: "https://jester-presence-api.onrender.com/icons/playstation.png"
 };
 
 const PLACEHOLDER_ICON = ICON_BASE + "game-placeholder.png";
-const CONTROLLER_ICON = ICON_BASE + "controller.png"; // only shows when idle
+const CONTROLLER_ICON = ICON_BASE + "controller.png";
 
 // ===============================
 // HELPERS
@@ -237,17 +237,15 @@ function resolveActivity(p) {
 }
 
 function updateGame(activity) {
-  const cover = document.getElementById("game-cover"); // big box
-  const icon = document.getElementById("game-icon");   // small box
+  const cover = document.getElementById("game-cover");
+  const icon = document.getElementById("game-icon");
   const title = document.getElementById("game-title");
   const details = document.getElementById("game-details");
   const timePlayed = document.getElementById("game-time");
   const platformPill = document.getElementById("game-platform");
   const panel = document.querySelector(".card-game");
 
-  // ===============================
   // NOTHING BEING PLAYED
-  // ===============================
   if (!activity) {
     panel.classList.remove("active");
     title.textContent = "Not playing";
@@ -262,9 +260,7 @@ function updateGame(activity) {
     return;
   }
 
-  // ===============================
   // ACTIVITY CHANGED
-  // ===============================
   const key = (activity.name || "") + (activity.details || "") + (activity.state || "");
   if (key === lastActivityKey) return;
   lastActivityKey = key;
@@ -272,18 +268,17 @@ function updateGame(activity) {
   title.textContent = activity.name || "Unknown game";
   details.textContent = activity.details || activity.state || "";
 
-  // Big box = GAME ICON
+  // Big box = GAME ICON / COVER
   cover.src = getGameLogo(activity);
 
   // Small box = PLATFORM ICON
   icon.src = getPlatformIcon(activity);
 
+  // Platform pill
   platformPill.textContent = activity.platform || "APP";
   platformPill.style.backgroundImage = `url(${getPlatformIcon(activity)})`;
 
-  // ===============================
   // TIME PLAYED
-  // ===============================
   if (activityTimerInterval) clearInterval(activityTimerInterval);
 
   const start = activity.timestamps?.start
