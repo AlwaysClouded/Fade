@@ -33,12 +33,8 @@ function getGameLogo(activity) {
     if (name.includes(key)) return GAME_LOGOS[key];
   }
 
-  // Xbox fallback
   if (activity.platform === "XBOX") return "https://i.imgur.com/1uXKp8y.png";
-
-  // PlayStation fallback
-  if (activity.platform === "PLAYSTATION")
-    return "https://i.imgur.com/3j1Yx0X.png";
+  if (activity.platform === "PLAYSTATION") return "https://i.imgur.com/3j1Yx0X.png";
 
   return "https://i.imgur.com/8QfQFfC.png";
 }
@@ -116,7 +112,7 @@ function updateDiscord(p) {
 }
 
 // ===============================
-// SPOTIFY PANEL
+// SPOTIFY PANEL (FIXED TIMESTAMPS)
 // ===============================
 function formatTime(ms) {
   const total = Math.floor(ms / 1000);
@@ -165,8 +161,14 @@ function updateSpotify(spotify) {
 
   if (spotifyInterval) clearInterval(spotifyInterval);
 
-  const start = spotify.timestamps?.start;
-  const end = spotify.timestamps?.end;
+  // ⭐ FIX: Convert ISO timestamps to ms
+  const start = spotify.timestamps?.start
+    ? new Date(spotify.timestamps.start).getTime()
+    : null;
+
+  const end = spotify.timestamps?.end
+    ? new Date(spotify.timestamps.end).getTime()
+    : null;
 
   if (!start || !end) {
     progressWrap.style.display = "none";
@@ -192,7 +194,6 @@ function updateSpotify(spotify) {
 // GAME PANEL (SYNCED WITH WORKER)
 // ===============================
 function getRealActivity(p) {
-  // Priority: Xbox → PlayStation → PC game
   if (p.xbox) return p.xbox;
   if (p.playstation) return p.playstation;
   if (p.game) return p.game;
@@ -227,6 +228,7 @@ function updateGame(activity) {
 
   title.textContent = activity.name;
   details.textContent = activity.details || activity.state || "";
+
   cover.src = activity.assets?.largeImage
     ? `https://media.discordapp.net/${activity.assets.largeImage.replace("mp:", "")}`
     : "https://i.imgur.com/8QfQFfC.png";
@@ -236,7 +238,10 @@ function updateGame(activity) {
 
   if (activityTimerInterval) clearInterval(activityTimerInterval);
 
-  const start = activity.timestamps?.start;
+  const start = activity.timestamps?.start
+    ? new Date(activity.timestamps.start).getTime()
+    : null;
+
   if (start) {
     activityTimerInterval = setInterval(() => {
       const diff = Date.now() - start;
