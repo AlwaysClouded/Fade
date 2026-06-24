@@ -4,7 +4,7 @@
 const USER_ID = "1360925264669966338";
 const API_URL = `https://jester-presence-api.onrender.com/api/presence?user=${USER_ID}&nocache=`;
 
-// Trackers
+// State trackers
 let lastSpotify = null;
 let spotifyInterval = null;
 let activityTimerInterval = null;
@@ -29,36 +29,10 @@ const PLATFORM_ICONS = {
   playstation: ICON_BASE + "playstation.png"
 };
 
-const DEFAULT_ICON = ICON_BASE + "xbox.png";
+const PLACEHOLDER_ICON = ICON_BASE + "game-placeholder.png";
 
 // ===============================
-// GAME LOGO RESOLVER
-// ===============================
-function getGameLogo(activity) {
-  if (!activity) return DEFAULT_ICON;
-
-  // Prefer Discord smallImage
-  if (activity.assets?.smallImage) {
-    return `https://media.discordapp.net/${activity.assets.smallImage.replace("mp:", "")}`;
-  }
-
-  const rawName = (activity.details || activity.name || "").toLowerCase();
-
-  // Known game icons
-  for (const key in GAME_LOGOS) {
-    if (rawName.includes(key)) return GAME_LOGOS[key];
-  }
-
-  // Platform fallback
-  const platform = (activity.platform || "").toLowerCase();
-  if (platform.includes("xbox")) return PLATFORM_ICONS.xbox;
-  if (platform.includes("playstation")) return PLATFORM_ICONS.playstation;
-
-  return DEFAULT_ICON;
-}
-
-// ===============================
-// LOGGING
+// HELPERS
 // ===============================
 function logLine(text) {
   const log = document.getElementById("log-output");
@@ -72,14 +46,56 @@ function logLine(text) {
   while (log.children.length > 5) log.removeChild(log.firstChild);
 }
 
+function formatTime(ms) {
+  const total = Math.floor(ms / 1000);
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function truncate(text, max = 32) {
+  return text && text.length > max ? text.slice(0, max) + "…" : text || "";
+}
+
 // ===============================
-// FETCH PRESENCE
+// GAME ICON RESOLUTION
+// ===============================
+function getGameLogo(activity) {
+  if (!activity) return PLACEHOLDER_ICON;
+
+  if (activity.assets?.smallImage) {
+    return `https://media.discordapp.net/${activity.assets.smallImage.replace("mp:", "")}`;
+  }
+
+  const rawName = (activity.details || activity.name || "").toLowerCase();
+
+  for (const key in GAME_LOGOS) {
+    if (rawName.includes(key)) return GAME_LOGOS[key];
+  }
+
+  return PLACEHOLDER_ICON;
+}
+
+function getPlatformIcon(activity) {
+  if (!activity) return PLACEHOLDER_ICON;
+
+  const platform = (activity.platform || "").toLowerCase();
+
+  if (platform.includes("xbox")) return PLATFORM_ICONS.xbox;
+  if (platform.includes("playstation")) return PLATFORM_ICONS.playstation;
+
+  return PLACEHOLDER_ICON;
+}
+
+// ===============================
+// PRESENCE FETCHING
 // ===============================
 async function fetchPresenceLazy() {
   let res = await fetch(API_URL + Date.now(), { cache: "no-store" });
   let json = await res.json();
 
   if (!json.presence) {
+    logLine("[API] Waiting for worker...");
     await new Promise(r => setTimeout(r, 1200));
     res = await fetch(API_URL + Date.now(), { cache: "no-store" });
     json = await res.json();
@@ -91,7 +107,10 @@ async function fetchPresenceLazy() {
 async function fetchPresence() {
   try {
     const p = await fetchPresenceLazy();
-    if (!p) return logLine("[API] No presence data");
+    if (!p) {
+      logLine("[API] No presence data");
+      return;
+    }
 
     updateDiscord(p);
     updateSpotify(p.spotify);
@@ -130,17 +149,6 @@ function updateDiscord(p) {
 // ===============================
 // SPOTIFY PANEL
 // ===============================
-function formatTime(ms) {
-  const total = Math.floor(ms / 1000);
-  const m = Math.floor(total / 60);
-  const s = total % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
-function truncate(text, max = 32) {
-  return text && text.length > max ? text.slice(0, max) + "…" : text || "";
-}
-
 function updateSpotify(spotify) {
   const cover = document.getElementById("spotify-cover");
   const title = document.getElementById("spotify-title");
@@ -163,7 +171,7 @@ function updateSpotify(spotify) {
       progressWrap.style.display = "none";
       title.textContent = "Not playing anything";
       artist.textContent = "";
-      cover.src = DEFAULT_ICON;
+      cover.src = PLACEHOLDER_ICON;
       return;
     }
   }
@@ -176,7 +184,7 @@ function updateSpotify(spotify) {
   const artistName = spotify.state || "";
   const albumArt = spotify.assets?.largeImage
     ? `https://i.scdn.co/image/${spotify.assets.largeImage.replace("spotify:", "")}`
-    : DEFAULT_ICON;
+    : PLACEHOLDER_ICON;
 
   cover.src = albumArt;
   title.textContent = truncate(song);
@@ -221,14 +229,17 @@ function updateSpotify(spotify) {
 // GAME PANEL
 // ===============================
 function resolveActivity(p) {
-  return p.xbox || p.playstation || p.game || null;
+  if (p.xbox) return { ...p.xbox, platform: "Xbox" };
+  if (p.playstation) return { ...p.playstation, platform: "PlayStation" };
+  if (p.game) return p.game;
+  return null;
 }
 
 function updateGame(activity) {
   const cover = document.getElementById("xbox-cover");
   const title = document.getElementById("xbox-title");
   const details = document.getElementById("xbox-details");
-  const icon = document.getElementById("xbox-icon");
+  const icon = document.getElementById("xbox-icon"); // platform icon
   const timePlayed = document.getElementById("xbox-time");
   const platformPill = document.getElementById("xbox-platform");
   const panel = document.querySelector(".card-game");
@@ -237,8 +248,8 @@ function updateGame(activity) {
     panel.classList.remove("active");
     title.textContent = "Not playing";
     details.textContent = "";
-    cover.src = DEFAULT_ICON;
-    icon.src = DEFAULT_ICON;
+    cover.src = PLACEHOLDER_ICON;
+    icon.src = PLACEHOLDER_ICON;
     timePlayed.textContent = "";
     platformPill.textContent = "IDLE";
     lastActivityKey = null;
@@ -246,18 +257,18 @@ function updateGame(activity) {
     return;
   }
 
-  const key = activity.name + (activity.details || "");
+  const key = (activity.name || "") + (activity.details || "") + (activity.state || "");
   if (key === lastActivityKey) return;
   lastActivityKey = key;
 
-  title.textContent = activity.name;
+  title.textContent = activity.name || "Unknown game";
   details.textContent = activity.details || activity.state || "";
 
   cover.src = activity.assets?.largeImage
     ? `https://media.discordapp.net/${activity.assets.largeImage.replace("mp:", "")}`
-    : DEFAULT_ICON;
+    : PLACEHOLDER_ICON;
 
-  icon.src = getGameLogo(activity);
+  icon.src = getPlatformIcon(activity);
   platformPill.textContent = activity.platform || "APP";
 
   if (activityTimerInterval) clearInterval(activityTimerInterval);
