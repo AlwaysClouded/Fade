@@ -1,7 +1,7 @@
 // ===============================
 // CONFIG
 // ===============================
-const USER_ID = "YOUR_USER_ID_HERE"; 
+const USER_ID = "1360925264669966338"; 
 const API_URL = `https://jester-presence-api.onrender.com/api/presence?user=${USER_ID}&nocache=`;
 
 // Trackers
