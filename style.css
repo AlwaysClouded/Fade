@@ -1,500 +1,382 @@
-/* Base reset */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+/* ===============================
+   SOFT RUBY UNIFIED THEME
+   =============================== */
+
+:root {
+  /* Core Ruby */
+  --ruby: #b71f3c;
+  --ruby-soft: #d44a63;
+
+  /* Light Neutrals */
+  --cream: #f7f3ef;
+  --warm-white: #fff8f5;
+  --fog: #e3deda;
+
+  /* Jewel Tones */
+  --emerald: #0f6a4f;
+  --navy: #0a1a2f;
+
+  /* Dark Neutrals */
+  --charcoal: #1a1a1a;
+  --graphite: #2b2b2b;
+  --steel: #3a3a3a;
+
+  /* Metals */
+  --rose-gold: #d9a6a0;
+  --gold: #e8c27a;
+
+  /* Glows */
+  --glow-soft: rgba(255, 248, 245, 0.7);
+  --glow-ruby: rgba(183, 31, 60, 0.35);
+  --glow-emerald: rgba(15, 106, 79, 0.35);
 }
+
+/* ===============================
+   PAGE BACKGROUND
+   =============================== */
 
 body {
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
-  background: #050509;
-  color: #f7f3f5;
-  overflow-x: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(215, 92, 122, 0.25), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(10, 26, 47, 0.7), #050509);
+  color: var(--warm-white);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
 }
 
-/* Background */
-.bg {
+/* Soft vignette */
+body::before {
+  content: "";
   position: fixed;
   inset: 0;
-  z-index: -2;
-  background: radial-gradient(circle at top left, #c00032 0, #050509 45%, #050509 100%);
+  pointer-events: none;
+  background:
+    radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.7));
+  z-index: -1;
 }
 
-#bg-canvas {
-  width: 100%;
-  height: 100%;
-  display: block;
+/* ===============================
+   LAYOUT / CONTAINERS
+   =============================== */
+
+.main-shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 3.5rem;
 }
 
-.bg-overlay {
+.section-title {
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fog);
+  opacity: 0.9;
+}
+
+/* ===============================
+   CARDS
+   =============================== */
+
+.card {
+  background: linear-gradient(145deg, rgba(26, 26, 26, 0.96), rgba(43, 43, 43, 0.96));
+  border-radius: 18px;
+  border: 1px solid rgba(217, 166, 160, 0.35);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+  padding: 1.25rem 1.4rem;
+  backdrop-filter: blur(18px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Soft inner glow */
+.card::before {
+  content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at bottom right, rgba(255, 51, 85, 0.18), transparent 60%);
+  background:
+    radial-gradient(circle at top left, rgba(215, 92, 122, 0.12), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(15, 106, 79, 0.12), transparent 55%);
+  opacity: 0.9;
   pointer-events: none;
 }
 
-/* Layout */
-.layout {
-  position: relative;
-  z-index: 1;
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 24px 16px 32px;
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 380px);
-  gap: 24px;
+/* Card header text */
+.card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--cream);
 }
 
-/* Hero (left) */
-.hero {
-  display: flex;
-  flex-direction: column;
-  min-height: calc(100vh - 56px);
-  padding: 18px 18px 20px;
-  border-radius: 20px;
-  background: radial-gradient(circle at top, rgba(192, 0, 50, 0.35), rgba(5, 5, 9, 0.96));
-  border: 1px solid rgba(232, 183, 164, 0.16);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(18px);
+.card-subtitle {
+  font-size: 0.75rem;
+  color: rgba(227, 222, 218, 0.75);
 }
 
-.hero-top {
-  display: flex;
+/* ===============================
+   BUTTONS
+   =============================== */
+
+.btn {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 18px;
-}
-
-.brand-mark {
-  font-size: 12px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(232, 183, 164, 0.9);
-}
-
-.btn-ghost {
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
   border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  border: 1px solid rgba(232, 183, 164, 0.5);
-  background: rgba(5, 5, 9, 0.6);
-  color: #f7f3f5;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border: 1px solid rgba(232, 194, 122, 0.65);
+  color: var(--warm-white);
+  background: radial-gradient(circle at top left, rgba(183, 31, 60, 0.9), rgba(10, 26, 47, 0.95));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 10px 24px rgba(0, 0, 0, 0.7);
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.85),
+    0 0 18px var(--glow-ruby);
+  background: radial-gradient(circle at top left, rgba(212, 74, 99, 1), rgba(10, 26, 47, 0.98));
+}
+
+/* Ghost button */
+.btn-ghost {
+  background: transparent;
+  border-color: rgba(217, 166, 160, 0.5);
+  box-shadow: none;
 }
 
 .btn-ghost:hover {
-  background: rgba(192, 0, 50, 0.4);
-  border-color: rgba(232, 183, 164, 0.9);
-  transform: translateY(-1px);
+  background: rgba(183, 31, 60, 0.12);
+  box-shadow: 0 0 0 1px rgba(232, 194, 122, 0.4);
 }
 
-/* Hero main */
-.hero-main {
-  display: flex;
-  gap: 18px;
-  align-items: center;
-  flex: 1;
-}
+/* ===============================
+   STATUS / PILLS
+   =============================== */
 
-.avatar-orbit {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  flex-shrink: 0;
-}
-
-.avatar-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid rgba(232, 183, 164, 0.45);
-}
-
-.avatar-ring.outer {
-  transform: scale(1.12);
-  opacity: 0.7;
-}
-
-.avatar-ring.inner {
-  transform: scale(0.88);
-  opacity: 0.5;
-}
-
-.avatar-core {
-  position: absolute;
-  inset: 16px;
-  border-radius: 50%;
-  overflow: hidden;
-  box-shadow: 0 0 18px rgba(192, 0, 50, 0.55);
-}
-
-.avatar-core img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero-text {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.hero-name {
-  margin: 0;
-  font-size: 26px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #ffe6ec;
-}
-
-.hero-handle {
-  margin: 0;
-  font-size: 14px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(232, 183, 164, 0.9);
-}
-
-.hero-tagline {
-  margin: 6px 0 0;
-  font-size: 14px;
-  max-width: 360px;
-  color: rgba(247, 243, 245, 0.9);
-}
-
-.hero-actions {
-  margin-top: 14px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.btn-solid,
-.btn-outline {
-  border-radius: 999px;
-  padding: 8px 18px;
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  border: 1px solid transparent;
-  cursor: pointer;
-  text-decoration: none;
+.pill {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-}
-
-.btn-solid {
-  background: linear-gradient(135deg, #c00032, #ff3355);
-  border-color: rgba(255, 255, 255, 0.08);
-  color: #fdf5f7;
-  box-shadow: 0 10px 24px rgba(192, 0, 50, 0.45);
-}
-
-.btn-solid:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(192, 0, 50, 0.6);
-}
-
-.btn-outline {
-  background: transparent;
-  border-color: rgba(232, 183, 164, 0.7);
-  color: #f7f3f5;
-}
-
-.btn-outline:hover {
-  background: rgba(192, 0, 50, 0.25);
-  border-color: rgba(232, 183, 164, 1);
-}
-
-.hero-footer {
-  margin-top: auto;
-  padding-top: 10px;
-  font-size: 11px;
-  color: rgba(232, 183, 164, 0.8);
-}
-
-/* Sidebar (right) */
-.sidebar {
-  min-height: calc(100vh - 56px);
-}
-
-.sidebar-shell {
-  height: 100%;
-  padding: 14px;
-  border-radius: 20px;
-  background: rgba(5, 5, 9, 0.92);
-  border: 1px solid rgba(232, 183, 164, 0.16);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(18px);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* Cards */
-.card {
-  position: relative;
-  padding: 10px 11px 12px;
-  border-radius: 14px;
-  background: radial-gradient(circle at top left, rgba(192, 0, 50, 0.16), rgba(10, 10, 14, 0.96));
-  border: 1px solid rgba(232, 183, 164, 0.18);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.7);
-  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(192, 0, 50, 0.35);
-  border-color: rgba(232, 183, 164, 0.4);
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-
-.card-label {
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(232, 183, 164, 0.9);
-}
-
-.card-body {
-  font-size: 13px;
-}
-
-/* Discord card */
-.status-dot {
-  width: 10px;
-  height: 10px;
+  gap: 0.35rem;
+  padding: 0.18rem 0.6rem;
   border-radius: 999px;
-  background: #747f8d;
-  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid rgba(227, 222, 218, 0.35);
+  color: var(--fog);
+  background: rgba(26, 26, 26, 0.9);
 }
 
-.discord-name {
-  display: block;
-  font-size: 15px;
-  font-weight: 600;
+/* Platform pill */
+.pill-platform {
+  border-color: rgba(232, 194, 122, 0.7);
+  color: var(--gold);
+  background: radial-gradient(circle at top left, rgba(183, 31, 60, 0.35), rgba(10, 26, 47, 0.9));
 }
 
-.discord-status {
-  display: block;
-  font-size: 13px;
-  color: rgba(247, 243, 245, 0.85);
+/* Status dot */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #43b581;
+  box-shadow: 0 0 0 4px rgba(67, 181, 129, 0.18);
 }
 
-.discord-custom {
-  margin-top: 4px;
-  font-size: 12px;
-  color: rgba(232, 183, 164, 0.9);
-}
+/* ===============================
+   DISCORD CARD
+   =============================== */
 
-/* Spotify card */
-.spotify-body {
+.card-discord {
   display: flex;
-  gap: 10px;
+  gap: 1rem;
   align-items: center;
 }
 
-.spotify-cover-wrap {
-  position: relative;
-  width: 64px;
-  height: 64px;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-#spotify-cover {
-  width: 100%;
-  height: 100%;
+.dp-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  border: 1px solid rgba(217, 166, 160, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 12px 26px rgba(0, 0, 0, 0.85);
   object-fit: cover;
 }
 
-.spotify-glow {
-  position: absolute;
-  inset: 0;
-  box-shadow: 0 0 18px rgba(192, 0, 50, 0.5);
-  pointer-events: none;
+.dp-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--cream);
 }
 
-.spotify-meta {
-  flex: 1;
+.dp-status-text {
+  font-size: 0.78rem;
+  color: rgba(227, 222, 218, 0.8);
+}
+
+.dp-custom-status {
+  font-size: 0.75rem;
+  color: rgba(227, 222, 218, 0.7);
+}
+
+/* ===============================
+   SPOTIFY CARD
+   =============================== */
+
+.card-spotify {
   display: flex;
-  flex-direction: column;
+  gap: 0.9rem;
+  align-items: center;
 }
 
-.spotify-title,
-.spotify-artist {
-  max-width: 190px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.spotify-cover {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  object-fit: cover;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.85),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .spotify-title {
-  font-size: 14px;
+  font-size: 0.85rem;
   font-weight: 600;
+  color: var(--warm-white);
 }
 
 .spotify-artist {
-  font-size: 12px;
-  color: rgba(247, 243, 245, 0.8);
+  font-size: 0.75rem;
+  color: rgba(227, 222, 218, 0.75);
 }
 
-/* Spotify progress */
 .spotify-progress {
+  margin-top: 0.35rem;
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 6px;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: rgba(227, 222, 218, 0.7);
 }
 
 .spotify-bar {
   flex: 1;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.16);
-  border-radius: 4px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(227, 222, 218, 0.18);
   overflow: hidden;
 }
 
 #spotify-bar-fill {
   height: 100%;
   width: 0%;
-  background: #1db954;
-  transition: width 0.25s linear;
-}
-
-#spotify-elapsed,
-#spotify-duration {
-  font-size: 11px;
-  color: rgba(247, 243, 245, 0.8);
-}
-
-/* Game card */
-.game-body {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.game-cover-wrap {
-  width: 64px;
-  height: 64px;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-#xbox-cover {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.game-meta {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.game-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.game-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  object-fit: contain;
-}
-
-.game-title {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.game-details {
-  font-size: 12px;
-  color: rgba(247, 243, 245, 0.8);
-}
-
-.game-time {
-  font-size: 12px;
-  color: #43b581;
-}
-
-.platform-pill {
-  font-size: 10px;
-  padding: 3px 8px;
   border-radius: 999px;
-  border: 1px solid rgba(232, 183, 164, 0.7);
-  color: rgba(232, 183, 164, 0.9);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
+  background: linear-gradient(90deg, var(--emerald), var(--ruby-soft));
 }
 
-/* Log card */
-.log-body {
-  max-height: 120px;
-  overflow-y: auto;
+/* ===============================
+   GAME CARD
+   =============================== */
+
+.card-game {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 0.9rem;
+  align-items: center;
 }
 
-.log-output {
+.card-game-cover-wrap {
+  position: relative;
+}
+
+.card-game-cover {
+  width: 96px;
+  height: 96px;
+  border-radius: 18px;
+  object-fit: cover;
+  box-shadow:
+    0 16px 32px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.card-game-icon {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(232, 194, 122, 0.8);
+  background: #050509;
+  padding: 3px;
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.card-game-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--cream);
+}
+
+.card-game-details {
+  font-size: 0.75rem;
+  color: rgba(227, 222, 218, 0.75);
+}
+
+.card-game-meta {
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  color: rgba(227, 222, 218, 0.7);
+}
+
+/* ===============================
+   LOG OUTPUT
+   =============================== */
+
+#log-output {
   font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 11px;
-  color: rgba(247, 243, 245, 0.9);
+  font-size: 0.7rem;
+  color: rgba(227, 222, 218, 0.7);
+  opacity: 0.9;
 }
 
 .log-line {
   display: block;
+  opacity: 0.85;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
+/* ===============================
+   SMALL ANIMATIONS
+   =============================== */
 
-  .hero {
-    min-height: auto;
-  }
-
-  .sidebar {
-    min-height: auto;
-  }
+.card,
+.btn,
+.dp-avatar,
+.spotify-cover,
+.card-game-cover {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
 
-@media (max-width: 600px) {
-  .hero-main {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .avatar-orbit {
-    width: 100px;
-    height: 100px;
-  }
-
-  .hero-actions {
-    width: 100%;
-  }
-
-  .btn-solid,
-  .btn-outline {
-    flex: 1;
-    justify-content: center;
-  }
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.9),
+    0 0 24px var(--glow-ruby);
+  border-color: rgba(232, 194, 122, 0.7);
 }
