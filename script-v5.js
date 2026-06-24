@@ -6,6 +6,7 @@ const API_URL = `https://jester-presence-api.onrender.com/api/presence?user=${US
 
 // Trackers
 let lastTrackId = null;
+let lastSpotify = null;
 let spotifyInterval = null;
 let activityTimerInterval = null;
 let lastActivityKey = null;
@@ -87,7 +88,7 @@ async function fetchPresence() {
   }
 }
 
-setInterval(fetchPresence, 5000);
+setInterval(fetchPresence, 2000);
 fetchPresence();
 
 // ===============================
@@ -112,7 +113,7 @@ function updateDiscord(p) {
 }
 
 // ===============================
-// SPOTIFY PANEL (FIXED TIMESTAMPS)
+// SPOTIFY PANEL (FAST + CACHED)
 // ===============================
 function formatTime(ms) {
   const total = Math.floor(ms / 1000);
@@ -134,15 +135,28 @@ function updateSpotify(spotify) {
   const elapsedEl = document.getElementById("spotify-elapsed");
   const durationEl = document.getElementById("spotify-duration");
 
-  if (!spotify) {
-    cover.src = "https://i.imgur.com/8QfQFfC.png";
-    title.textContent = "Not playing anything";
-    artist.textContent = "";
-    progressWrap.style.display = "none";
-    if (spotifyInterval) clearInterval(spotifyInterval);
-    lastTrackId = null;
-    return;
+  // ⭐ If Discord temporarily drops Spotify, keep showing last track
+  if (!spotify && lastSpotify) {
+    const now = Date.now();
+    const end = lastSpotify.timestamps?.end
+      ? new Date(lastSpotify.timestamps.end).getTime()
+      : null;
+
+    if (end && now < end) {
+      spotify = lastSpotify;
+    } else {
+      lastSpotify = null;
+      progressWrap.style.display = "none";
+      title.textContent = "Not playing anything";
+      artist.textContent = "";
+      cover.src = "https://i.imgur.com/8QfQFfC.png";
+      return;
+    }
   }
+
+  if (!spotify) return;
+
+  lastSpotify = spotify;
 
   const song = spotify.details || "";
   const artistName = spotify.state || "";
@@ -150,18 +164,10 @@ function updateSpotify(spotify) {
     ? `https://i.scdn.co/image/${spotify.assets.largeImage.replace("spotify:", "")}`
     : "https://i.imgur.com/8QfQFfC.png";
 
-  const trackId = song + artistName;
+  cover.src = albumArt;
+  title.textContent = truncate(song);
+  artist.textContent = truncate(artistName);
 
-  if (trackId !== lastTrackId) {
-    cover.src = albumArt;
-    title.textContent = truncate(song);
-    artist.textContent = truncate(artistName);
-    lastTrackId = trackId;
-  }
-
-  if (spotifyInterval) clearInterval(spotifyInterval);
-
-  // ⭐ FIX: Convert ISO timestamps to ms
   const start = spotify.timestamps?.start
     ? new Date(spotify.timestamps.start).getTime()
     : null;
@@ -180,6 +186,8 @@ function updateSpotify(spotify) {
   const duration = end - start;
   durationEl.textContent = formatTime(duration);
 
+  if (spotifyInterval) clearInterval(spotifyInterval);
+
   spotifyInterval = setInterval(() => {
     const now = Date.now();
     const elapsed = now - start;
@@ -187,11 +195,16 @@ function updateSpotify(spotify) {
 
     elapsedEl.textContent = formatTime(clamped);
     barFill.style.width = `${(clamped / duration) * 100}%`;
+
+    if (now >= end) {
+      lastSpotify = null;
+      clearInterval(spotifyInterval);
+    }
   }, 1000);
 }
 
 // ===============================
-// GAME PANEL (SYNCED WITH WORKER)
+// GAME PANEL
 // ===============================
 function getRealActivity(p) {
   if (p.xbox) return p.xbox;
