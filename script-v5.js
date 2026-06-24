@@ -5,25 +5,31 @@ const USER_ID = "1360925264669966338";
 const API_URL = `https://jester-presence-api.onrender.com/api/presence?user=${USER_ID}&nocache=`;
 
 // Trackers
-let lastTrackId = null;
 let lastSpotify = null;
 let spotifyInterval = null;
 let activityTimerInterval = null;
 let lastActivityKey = null;
 
 // ===============================
-// ICONS (APEX + FORTNITE WORKING)
+// ICONS (RENDER HOSTED)
 // ===============================
-const ICON_BASE = "https://silver-arc-production.github.io/Jester-Bot-Deployment/assets/icons/";
+const ICON_BASE = "https://jester-presence-api.onrender.com/icons/";
 
 const GAME_LOGOS = {
   apex: ICON_BASE + "apex.png",
-  fortnite: ICON_BASE + "fortnite.png"
+  fortnite: ICON_BASE + "fortnite.png",
+  minecraft: ICON_BASE + "minecraft.png",
+  roblox: ICON_BASE + "roblox.png",
+  thieves: ICON_BASE + "thieves.png",
+  astroneer: ICON_BASE + "astroneer.png"
 };
 
-const DEFAULT_ICON = ICON_BASE + "fortnite.png";
-const XBOX_ICON = ICON_BASE + "fortnite.png";
-const PLAYSTATION_ICON = ICON_BASE + "fortnite.png";
+const PLATFORM_ICONS = {
+  xbox: ICON_BASE + "xbox.png",
+  playstation: ICON_BASE + "playstation.png"
+};
+
+const DEFAULT_ICON = ICON_BASE + "xbox.png";
 
 // ===============================
 // GAME LOGO RESOLVER
@@ -31,22 +37,22 @@ const PLAYSTATION_ICON = ICON_BASE + "fortnite.png";
 function getGameLogo(activity) {
   if (!activity) return DEFAULT_ICON;
 
-  // Prefer Discord smallImage if present
+  // Prefer Discord smallImage
   if (activity.assets?.smallImage) {
     return `https://media.discordapp.net/${activity.assets.smallImage.replace("mp:", "")}`;
   }
 
-  // Use details first (console often puts game name here), then name
   const rawName = (activity.details || activity.name || "").toLowerCase();
 
+  // Known game icons
   for (const key in GAME_LOGOS) {
     if (rawName.includes(key)) return GAME_LOGOS[key];
   }
 
-  // Fallback by platform
-  const platform = (activity.platform || "").toUpperCase();
-  if (platform === "XBOX") return XBOX_ICON;
-  if (platform === "PLAYSTATION") return PLAYSTATION_ICON;
+  // Platform fallback
+  const platform = (activity.platform || "").toLowerCase();
+  if (platform.includes("xbox")) return PLATFORM_ICONS.xbox;
+  if (platform.includes("playstation")) return PLATFORM_ICONS.playstation;
 
   return DEFAULT_ICON;
 }
@@ -74,9 +80,7 @@ async function fetchPresenceLazy() {
   let json = await res.json();
 
   if (!json.presence) {
-    logLine("[API] Waiting for worker...");
     await new Promise(r => setTimeout(r, 1200));
-
     res = await fetch(API_URL + Date.now(), { cache: "no-store" });
     json = await res.json();
   }
@@ -91,7 +95,7 @@ async function fetchPresence() {
 
     updateDiscord(p);
     updateSpotify(p.spotify);
-    updateGame(getRealActivity(p));
+    updateGame(resolveActivity(p));
 
     logLine("[API] Presence updated");
   } catch (err) {
@@ -216,11 +220,8 @@ function updateSpotify(spotify) {
 // ===============================
 // GAME PANEL
 // ===============================
-function getRealActivity(p) {
-  if (p.xbox) return p.xbox;
-  if (p.playstation) return p.playstation;
-  if (p.game) return p.game;
-  return null;
+function resolveActivity(p) {
+  return p.xbox || p.playstation || p.game || null;
 }
 
 function updateGame(activity) {
