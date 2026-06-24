@@ -30,7 +30,6 @@ const PLATFORM_ICONS = {
 };
 
 const PLACEHOLDER_ICON = ICON_BASE + "game-placeholder.png";
-const CONTROLLER_ICON = ICON_BASE + "controller.png";
 
 // ===============================
 // HELPERS
@@ -78,14 +77,14 @@ function getGameLogo(activity) {
 }
 
 function getPlatformIcon(activity) {
-  if (!activity) return CONTROLLER_ICON;
+  if (!activity) return null;
 
   const platform = (activity.platform || "").toLowerCase();
 
   if (platform.includes("xbox")) return PLATFORM_ICONS.xbox;
   if (platform.includes("playstation")) return PLATFORM_ICONS.playstation;
 
-  return CONTROLLER_ICON;
+  return null;
 }
 
 // ===============================
@@ -251,9 +250,10 @@ function updateGame(activity) {
     title.textContent = "Not playing";
     details.textContent = "";
     cover.src = PLACEHOLDER_ICON;
-    icon.src = CONTROLLER_ICON;
-    platformPill.textContent = "IDLE";
-    platformPill.style.backgroundImage = `url(${CONTROLLER_ICON})`;
+
+    icon.style.display = "none";
+    platformPill.style.display = "none";
+
     timePlayed.textContent = "";
     lastActivityKey = null;
     if (activityTimerInterval) clearInterval(activityTimerInterval);
@@ -272,11 +272,19 @@ function updateGame(activity) {
   cover.src = getGameLogo(activity);
 
   // Small box = PLATFORM ICON
-  icon.src = getPlatformIcon(activity);
+  const platformIcon = getPlatformIcon(activity);
 
-  // Platform pill
-  platformPill.textContent = activity.platform || "APP";
-  platformPill.style.backgroundImage = `url(${getPlatformIcon(activity)})`;
+  if (platformIcon) {
+    icon.src = platformIcon;
+    icon.style.display = "block";
+
+    platformPill.style.display = "inline-block";
+    platformPill.style.backgroundImage = `url(${platformIcon})`;
+    platformPill.textContent = activity.platform || "";
+  } else {
+    icon.style.display = "none";
+    platformPill.style.display = "none";
+  }
 
   // TIME PLAYED
   if (activityTimerInterval) clearInterval(activityTimerInterval);
