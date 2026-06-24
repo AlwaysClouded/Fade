@@ -3,35 +3,23 @@
    ============================================================ */
 
 :root {
-  /* Core Ruby */
   --ruby: #b71f3c;
   --ruby-soft: #d44a63;
-
-  /* Jewel Tones */
   --emerald: #0f6a4f;
   --navy: #0a1a2f;
-
-  /* Light Neutrals */
   --cream: #f7f3ef;
   --warm-white: #fff8f5;
   --fog: #e3deda;
-
-  /* Dark Neutrals */
   --charcoal: #1a1a1a;
   --graphite: #2b2b2b;
   --steel: #3a3a3a;
-
-  /* Metals */
   --gold: #e8c27a;
   --rose-gold: #d9a6a0;
-
-  /* Glows */
   --glow-ruby: rgba(183, 31, 60, 0.45);
   --glow-emerald: rgba(15, 106, 79, 0.4);
   --glow-gold: rgba(232, 194, 122, 0.45);
 }
 
-/* Base reset */
 *,
 *::before,
 *::after {
@@ -84,7 +72,7 @@ body {
   gap: 24px;
 }
 
-/* Hero (left) */
+/* Hero */
 .hero {
   display: flex;
   flex-direction: column;
@@ -275,7 +263,7 @@ body {
   color: rgba(232, 194, 122, 0.85);
 }
 
-/* Sidebar (right) */
+/* Sidebar */
 .sidebar {
   min-height: calc(100vh - 56px);
 }
@@ -454,133 +442,8 @@ body {
   color: rgba(247, 243, 245, 0.8);
 }
 
-/* Game card */
-.game-body {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.game-cover-wrap {
-  width: 64px;
-  height: 64px;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow:
-    0 12px 26px rgba(0, 0, 0, 0.9),
-    0 0 0 1px rgba(255, 255, 255, 0.04);
-}
-
-#xbox-cover {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.game-meta {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.game-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.game-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  object-fit: contain;
-  box-shadow:
-    0 6px 14px rgba(0, 0, 0, 0.85),
-    0 0 0 1px rgba(255, 255, 255, 0.04);
-}
-
-.game-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--cream);
-}
-
-.game-details {
-  font-size: 12px;
-  color: rgba(247, 243, 245, 0.8);
-}
-
-.game-time {
-  font-size: 12px;
-  color: #43b581;
-}
-
-.platform-pill {
-  font-size: 10px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(232, 194, 122, 0.8);
-  color: rgba(232, 194, 122, 0.95);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  background: radial-gradient(circle at top left, rgba(183, 31, 60, 0.35), rgba(10, 26, 47, 0.9));
-}
-
-/* Log card */
-.log-body {
-  max-height: 120px;
-  overflow-y: auto;
-}
-
-.log-output {
-  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 11px;
-  color: rgba(247, 243, 245, 0.9);
-}
-
-.log-line {
-  display: block;
-}
-
-/* Responsive */
-@media (max-width: 900px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .hero {
-    min-height: auto;
-  }
-
-  .sidebar {
-    min-height: auto;
-  }
-}
-
-@media (max-width: 600px) {
-  .hero-main {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .avatar-orbit {
-    width: 100px;
-    height: 100px;
-  }
-
-  .hero-actions {
-    width: 100%;
-  }
-
-  .btn-solid,
-  .btn-outline {
-    flex: 1;
-    justify-content: center;
-  }
-}
 /* ============================================================
-   GAME CARD — UPDATED NAMING (FINAL SECTION)
+   GAME CARD — UPDATED NAMING
    ============================================================ */
 
 .game-body {
@@ -650,7 +513,7 @@ body {
   color: #43b581;
 }
 
-#game-platform.platform-pill {
+#game-platform {
   font-size: 10px;
   padding: 3px 8px;
   border-radius: 999px;
@@ -681,7 +544,7 @@ body {
   display: block;
 }
 
-/* Responsive — final section */
+/* Responsive */
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: minmax(0, 1fr);
