@@ -12,32 +12,42 @@ let activityTimerInterval = null;
 let lastActivityKey = null;
 
 // ===============================
-// GAME LOGOS
+// TEMP ICON SET (APEX ONLY)
 // ===============================
+const ICON_BASE = "https://silver-arc-production.github.io/Jester-Bot-Deployment/assets/icons/";
+
 const GAME_LOGOS = {
-  fortnite: "https://i.imgur.com/0ZQ9Q0X.png",
-  apex: "https://i.imgur.com/7x0yY8M.png",
-  minecraft: "https://i.imgur.com/8n4z0Qp.png",
-  roblox: "https://i.imgur.com/6Q0m8yX.png",
-  valorant: "https://i.imgur.com/1Q0m8yX.png",
-  gta: "https://i.imgur.com/8e4Q0mX.png",
-  "call of duty": "https://i.imgur.com/4yQ0m0P.png",
-  "rocket league": "https://i.imgur.com/5Q0m8yX.png"
+  apex: ICON_BASE + "apex.png"
 };
 
+const DEFAULT_ICON = ICON_BASE + "apex.png";
+const XBOX_ICON = ICON_BASE + "apex.png";
+const PLAYSTATION_ICON = ICON_BASE + "apex.png";
+
+// ===============================
+// GAME LOGO RESOLVER
+// ===============================
 function getGameLogo(activity) {
-  if (!activity || !activity.name) return "https://i.imgur.com/8QfQFfC.png";
+  if (!activity) return DEFAULT_ICON;
 
-  const name = activity.name.toLowerCase();
-
-  for (const key in GAME_LOGOS) {
-    if (name.includes(key)) return GAME_LOGOS[key];
+  // Prefer Discord smallImage if present
+  if (activity.assets?.smallImage) {
+    return `https://media.discordapp.net/${activity.assets.smallImage.replace("mp:", "")}`;
   }
 
-  if (activity.platform === "XBOX") return "https://i.imgur.com/1uXKp8y.png";
-  if (activity.platform === "PLAYSTATION") return "https://i.imgur.com/3j1Yx0X.png";
+  // Use details first (console often puts game name here), then name
+  const rawName = (activity.details || activity.name || "").toLowerCase();
 
-  return "https://i.imgur.com/8QfQFfC.png";
+  for (const key in GAME_LOGOS) {
+    if (rawName.includes(key)) return GAME_LOGOS[key];
+  }
+
+  // Fallback by platform
+  const platform = (activity.platform || "").toUpperCase();
+  if (platform === "XBOX") return XBOX_ICON;
+  if (platform === "PLAYSTATION") return PLAYSTATION_ICON;
+
+  return DEFAULT_ICON;
 }
 
 // ===============================
@@ -135,7 +145,6 @@ function updateSpotify(spotify) {
   const elapsedEl = document.getElementById("spotify-elapsed");
   const durationEl = document.getElementById("spotify-duration");
 
-  // ⭐ If Discord temporarily drops Spotify, keep showing last track
   if (!spotify && lastSpotify) {
     const now = Date.now();
     const end = lastSpotify.timestamps?.end
@@ -149,7 +158,7 @@ function updateSpotify(spotify) {
       progressWrap.style.display = "none";
       title.textContent = "Not playing anything";
       artist.textContent = "";
-      cover.src = "https://i.imgur.com/8QfQFfC.png";
+      cover.src = DEFAULT_ICON;
       return;
     }
   }
@@ -162,7 +171,7 @@ function updateSpotify(spotify) {
   const artistName = spotify.state || "";
   const albumArt = spotify.assets?.largeImage
     ? `https://i.scdn.co/image/${spotify.assets.largeImage.replace("spotify:", "")}`
-    : "https://i.imgur.com/8QfQFfC.png";
+    : DEFAULT_ICON;
 
   cover.src = albumArt;
   title.textContent = truncate(song);
@@ -226,8 +235,8 @@ function updateGame(activity) {
     panel.classList.remove("active");
     title.textContent = "Not playing";
     details.textContent = "";
-    cover.src = "https://i.imgur.com/8QfQFfC.png";
-    icon.src = "https://i.imgur.com/8QfQFfC.png";
+    cover.src = DEFAULT_ICON;
+    icon.src = DEFAULT_ICON;
     timePlayed.textContent = "";
     platformPill.textContent = "IDLE";
     lastActivityKey = null;
@@ -244,7 +253,7 @@ function updateGame(activity) {
 
   cover.src = activity.assets?.largeImage
     ? `https://media.discordapp.net/${activity.assets.largeImage.replace("mp:", "")}`
-    : "https://i.imgur.com/8QfQFfC.png";
+    : DEFAULT_ICON;
 
   icon.src = getGameLogo(activity);
   platformPill.textContent = activity.platform || "APP";
