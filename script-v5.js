@@ -12,17 +12,18 @@ let activityTimerInterval = null;
 let lastActivityKey = null;
 
 // ===============================
-// TEMP ICON SET (APEX ONLY)
+// ICONS (APEX + FORTNITE WORKING)
 // ===============================
-const ICON_BASE = "https://github.com/Silver-Arc-Production/Jester-Bot-Deployment/blob/deploy/assets/icons/";
+const ICON_BASE = "https://silver-arc-production.github.io/Jester-Bot-Deployment/assets/icons/";
 
 const GAME_LOGOS = {
-  apex: ICON_BASE + "apex.png"
+  apex: ICON_BASE + "apex.png",
+  fortnite: ICON_BASE + "fortnite.png"
 };
 
-const DEFAULT_ICON = ICON_BASE + "apex.png";
-const XBOX_ICON = ICON_BASE + "apex.png";
-const PLAYSTATION_ICON = ICON_BASE + "apex.png";
+const DEFAULT_ICON = ICON_BASE + "fortnite.png";
+const XBOX_ICON = ICON_BASE + "fortnite.png";
+const PLAYSTATION_ICON = ICON_BASE + "fortnite.png";
 
 // ===============================
 // GAME LOGO RESOLVER
@@ -123,7 +124,7 @@ function updateDiscord(p) {
 }
 
 // ===============================
-// SPOTIFY PANEL (FAST + CACHED)
+// SPOTIFY PANEL
 // ===============================
 function formatTime(ms) {
   const total = Math.floor(ms / 1000);
