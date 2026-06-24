@@ -14,7 +14,7 @@ let lastActivityKey = null;
 // ===============================
 // TEMP ICON SET (APEX ONLY)
 // ===============================
-const ICON_BASE = "https://silver-arc-production.github.io/Jester-Bot-Deployment/assets/icons/";
+const ICON_BASE = "https://github.com/Silver-Arc-Production/Jester-Bot-Deployment/blob/deploy/assets/icons/";
 
 const GAME_LOGOS = {
   apex: ICON_BASE + "apex.png"
