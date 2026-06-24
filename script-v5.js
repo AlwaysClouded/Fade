@@ -30,6 +30,7 @@ const PLATFORM_ICONS = {
 };
 
 const PLACEHOLDER_ICON = ICON_BASE + "game-placeholder.png";
+const CONTROLLER_ICON = ICON_BASE + "controller.png"; // only shows when idle
 
 // ===============================
 // HELPERS
@@ -63,8 +64,8 @@ function truncate(text, max = 32) {
 function getGameLogo(activity) {
   if (!activity) return PLACEHOLDER_ICON;
 
-  if (activity.assets?.smallImage) {
-    return `https://media.discordapp.net/${activity.assets.smallImage.replace("mp:", "")}`;
+  if (activity.assets?.largeImage) {
+    return `https://media.discordapp.net/${activity.assets.largeImage.replace("mp:", "")}`;
   }
 
   const rawName = (activity.details || activity.name || "").toLowerCase();
@@ -77,14 +78,14 @@ function getGameLogo(activity) {
 }
 
 function getPlatformIcon(activity) {
-  if (!activity) return PLACEHOLDER_ICON;
+  if (!activity) return CONTROLLER_ICON;
 
   const platform = (activity.platform || "").toLowerCase();
 
   if (platform.includes("xbox")) return PLATFORM_ICONS.xbox;
   if (platform.includes("playstation")) return PLATFORM_ICONS.playstation;
 
-  return PLACEHOLDER_ICON;
+  return CONTROLLER_ICON;
 }
 
 // ===============================
@@ -236,28 +237,34 @@ function resolveActivity(p) {
 }
 
 function updateGame(activity) {
-  const cover = document.getElementById("xbox-cover");
-  const title = document.getElementById("xbox-title");
-  const details = document.getElementById("xbox-details");
-  const icon = document.getElementById("xbox-icon"); // GAME ICON
-  const timePlayed = document.getElementById("xbox-time");
-  const platformPill = document.getElementById("xbox-platform");
+  const cover = document.getElementById("game-cover"); // big box
+  const icon = document.getElementById("game-icon");   // small box
+  const title = document.getElementById("game-title");
+  const details = document.getElementById("game-details");
+  const timePlayed = document.getElementById("game-time");
+  const platformPill = document.getElementById("game-platform");
   const panel = document.querySelector(".card-game");
 
+  // ===============================
+  // NOTHING BEING PLAYED
+  // ===============================
   if (!activity) {
     panel.classList.remove("active");
     title.textContent = "Not playing";
     details.textContent = "";
     cover.src = PLACEHOLDER_ICON;
-    icon.src = PLACEHOLDER_ICON;
-    timePlayed.textContent = "";
+    icon.src = CONTROLLER_ICON;
     platformPill.textContent = "IDLE";
-    platformPill.style.backgroundImage = `url(${PLACEHOLDER_ICON})`;
+    platformPill.style.backgroundImage = `url(${CONTROLLER_ICON})`;
+    timePlayed.textContent = "";
     lastActivityKey = null;
     if (activityTimerInterval) clearInterval(activityTimerInterval);
     return;
   }
 
+  // ===============================
+  // ACTIVITY CHANGED
+  // ===============================
   const key = (activity.name || "") + (activity.details || "") + (activity.state || "");
   if (key === lastActivityKey) return;
   lastActivityKey = key;
@@ -265,16 +272,18 @@ function updateGame(activity) {
   title.textContent = activity.name || "Unknown game";
   details.textContent = activity.details || activity.state || "";
 
-  cover.src = activity.assets?.largeImage
-    ? `https://media.discordapp.net/${activity.assets.largeImage.replace("mp:", "")}`
-    : PLACEHOLDER_ICON;
+  // Big box = GAME ICON
+  cover.src = getGameLogo(activity);
 
-  icon.src = getGameLogo(activity);
+  // Small box = PLATFORM ICON
+  icon.src = getPlatformIcon(activity);
 
-  const platformIcon = getPlatformIcon(activity);
   platformPill.textContent = activity.platform || "APP";
-  platformPill.style.backgroundImage = `url(${platformIcon})`;
+  platformPill.style.backgroundImage = `url(${getPlatformIcon(activity)})`;
 
+  // ===============================
+  // TIME PLAYED
+  // ===============================
   if (activityTimerInterval) clearInterval(activityTimerInterval);
 
   const start = activity.timestamps?.start
@@ -294,31 +303,3 @@ function updateGame(activity) {
 
   panel.classList.add("active");
 }
-
-// ===============================
-// MUSIC TOGGLE
-// ===============================
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("music-unlock");
-  const audio = document.getElementById("bg-audio");
-
-  if (!btn || !audio) return;
-
-  audio.muted = true;
-
-  btn.addEventListener("click", async () => {
-    try {
-      if (audio.paused || audio.muted) {
-        audio.muted = false;
-        await audio.play();
-        btn.textContent = "MUTE TRACK";
-      } else {
-        audio.pause();
-        audio.muted = true;
-        btn.textContent = "UNMUTE TRACK";
-      }
-    } catch (err) {
-      console.error("[Audio] Play blocked:", err);
-    }
-  });
-});
