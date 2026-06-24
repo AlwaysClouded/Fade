@@ -58,7 +58,7 @@ function truncate(text, max = 32) {
 }
 
 // ===============================
-// GAME ICON RESOLUTION
+// ICON RESOLUTION
 // ===============================
 function getGameLogo(activity) {
   if (!activity) return PLACEHOLDER_ICON;
@@ -239,7 +239,7 @@ function updateGame(activity) {
   const cover = document.getElementById("xbox-cover");
   const title = document.getElementById("xbox-title");
   const details = document.getElementById("xbox-details");
-  const icon = document.getElementById("xbox-icon"); // platform icon
+  const icon = document.getElementById("xbox-icon"); // GAME ICON
   const timePlayed = document.getElementById("xbox-time");
   const platformPill = document.getElementById("xbox-platform");
   const panel = document.querySelector(".card-game");
@@ -252,6 +252,7 @@ function updateGame(activity) {
     icon.src = PLACEHOLDER_ICON;
     timePlayed.textContent = "";
     platformPill.textContent = "IDLE";
+    platformPill.style.backgroundImage = `url(${PLACEHOLDER_ICON})`;
     lastActivityKey = null;
     if (activityTimerInterval) clearInterval(activityTimerInterval);
     return;
@@ -268,8 +269,11 @@ function updateGame(activity) {
     ? `https://media.discordapp.net/${activity.assets.largeImage.replace("mp:", "")}`
     : PLACEHOLDER_ICON;
 
-  icon.src = getPlatformIcon(activity);
+  icon.src = getGameLogo(activity);
+
+  const platformIcon = getPlatformIcon(activity);
   platformPill.textContent = activity.platform || "APP";
+  platformPill.style.backgroundImage = `url(${platformIcon})`;
 
   if (activityTimerInterval) clearInterval(activityTimerInterval);
 
