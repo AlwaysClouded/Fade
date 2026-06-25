@@ -25,11 +25,45 @@ const GAME_LOGOS = {
 };
 
 const PLATFORM_ICONS = {
-  xbox: "https://jester-presence-api.onrender.com/icons/xbox.png",
-  playstation: "https://jester-presence-api.onrender.com/icons/playstation.png"
+  xbox: ICON_BASE + "xbox.png",
+  playstation: ICON_BASE + "playstation.png"
 };
 
 const PLACEHOLDER_ICON = ICON_BASE + "game-placeholder.png";
+
+// ===============================
+// AUDIO PLAYER (FIXED)
+// ===============================
+const audio = document.getElementById("bg-audio");
+const unlockBtn = document.getElementById("music-unlock");
+
+if (unlockBtn && audio) {
+  unlockBtn.addEventListener("click", async () => {
+    try {
+      // If audio file missing or failed to load
+      if (!audio.src || audio.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+        logLine("[Audio] ERROR: Audio file missing or failed to load");
+        return;
+      }
+
+      // Toggle mute/play
+      if (audio.paused || audio.muted) {
+        audio.muted = false;
+        await audio.play();
+        unlockBtn.textContent = "MUTE TRACK";
+        logLine("[Audio] Track unmuted + playing");
+      } else {
+        audio.muted = true;
+        audio.pause();
+        unlockBtn.textContent = "UNMUTE TRACK";
+        logLine("[Audio] Track muted + paused");
+      }
+    } catch (err) {
+      logLine("[Audio] Playback blocked or failed");
+      console.error(err);
+    }
+  });
+}
 
 // ===============================
 // HELPERS
@@ -244,7 +278,6 @@ function updateGame(activity) {
   const platformPill = document.getElementById("game-platform");
   const panel = document.querySelector(".card-game");
 
-  // NOTHING BEING PLAYED
   if (!activity) {
     panel.classList.remove("active");
     title.textContent = "Not playing";
@@ -260,7 +293,6 @@ function updateGame(activity) {
     return;
   }
 
-  // ACTIVITY CHANGED
   const key = (activity.name || "") + (activity.details || "") + (activity.state || "");
   if (key === lastActivityKey) return;
   lastActivityKey = key;
@@ -268,10 +300,8 @@ function updateGame(activity) {
   title.textContent = activity.name || "Unknown game";
   details.textContent = activity.details || activity.state || "";
 
-  // Big box = GAME ICON / COVER
   cover.src = getGameLogo(activity);
 
-  // Small box = PLATFORM ICON
   const platformIcon = getPlatformIcon(activity);
 
   if (platformIcon) {
@@ -286,7 +316,6 @@ function updateGame(activity) {
     platformPill.style.display = "none";
   }
 
-  // TIME PLAYED
   if (activityTimerInterval) clearInterval(activityTimerInterval);
 
   const start = activity.timestamps?.start
