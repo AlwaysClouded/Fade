@@ -13,13 +13,6 @@ let lastActivityKey = null;
 // ===============================
 // ICONS (PUBLIC SOURCES)
 // ===============================
-const GAME_LOGOS = {
-  fortnite: "https://static.wikia.nocookie.net/fortnite_gamepedia/images/5/5f/Fortnite_F_icon.png",
-  minecraft: "https://static.wikia.nocookie.net/minecraft_gamepedia/images/4/4e/Grass_Block_JE5_BE3.png",
-  roblox: "https://upload.wikimedia.org/wikipedia/commons/5/5f/Roblox_Logo_Black.svg",
-  apex: "https://static.wikia.nocookie.net/apexlegends_gamepedia/images/2/2f/Apex_Legends_icon.png"
-};
-
 const PLATFORM_ICONS = {
   xbox: "https://upload.wikimedia.org/wikipedia/commons/4/43/Xbox_one_logo.svg",
   playstation: "https://upload.wikimedia.org/wikipedia/commons/4/4e/PlayStation_logo.svg"
@@ -85,15 +78,25 @@ function truncate(text, max = 32) {
 }
 
 // ===============================
-// GAME ICON RESOLUTION
+// ACTIVITY ARTWORK RESOLUTION (REAL DISCORD ASSETS)
 // ===============================
-function getGameLogo(activity) {
-  if (!activity) return PLACEHOLDER_ICON;
+function getActivityImage(activity) {
+  const img = activity?.assets?.large_image;
+  if (!img) return PLACEHOLDER_ICON;
 
-  const rawName = (activity.name || "").toLowerCase();
+  // External art (used by many rich-presence integrations, e.g. Spotify embeds via Discord)
+  if (img.startsWith("mp:external/")) {
+    return `https://media.discordapp.net/external/${img.replace("mp:external/", "")}`;
+  }
 
-  for (const key in GAME_LOGOS) {
-    if (rawName.includes(key)) return GAME_LOGOS[key];
+  // Spotify-style asset key
+  if (img.startsWith("spotify:")) {
+    return `https://i.scdn.co/image/${img.replace("spotify:", "")}`;
+  }
+
+  // App-uploaded asset, keyed by application_id
+  if (activity.application_id) {
+    return `https://cdn.discordapp.com/app-assets/${activity.application_id}/${img}.png`;
   }
 
   return PLACEHOLDER_ICON;
@@ -167,7 +170,7 @@ function updateDiscord(p) {
 }
 
 // ===============================
-// SPOTIFY PANEL (NEW ALBUM ART LOGIC)
+// SPOTIFY PANEL (FIXED ALBUM ART LOGIC)
 // ===============================
 function updateSpotify(spotify) {
   const cover = document.getElementById("spotify-cover");
@@ -188,9 +191,8 @@ function updateSpotify(spotify) {
 
   lastSpotify = spotify;
 
-  // NEW: stable album art
-  const artId = spotify.album_art_url.replace("spotify:", "");
-  cover.src = `https://i.scdn.co/image/${artId}`;
+  // Lanyard already provides a complete, ready-to-use image URL
+  cover.src = spotify.album_art_url || PLACEHOLDER_ICON;
 
   title.textContent = truncate(spotify.song);
   artist.textContent = truncate(spotify.artist);
@@ -226,7 +228,7 @@ function updateSpotify(spotify) {
 }
 
 // ===============================
-// GAME PANEL (NEW XBOX DETECTION)
+// GAME PANEL (REAL ARTWORK + XBOX/PLAYSTATION DETECTION)
 // ===============================
 function resolveActivity(p) {
   const acts = p.activities;
@@ -265,7 +267,7 @@ function updateGame(activity) {
   title.textContent = activity.name;
   details.textContent = activity.details || "";
 
-  cover.src = getGameLogo(activity);
+  cover.src = getActivityImage(activity);
 
   const platformIcon = getPlatformIcon(activity);
 
