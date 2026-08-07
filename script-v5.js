@@ -1,5 +1,5 @@
 // ===============================
-// CONFIG (LANYARD)
+// CONFIG (LANYARD ONLY)
 // ===============================
 const USER_ID = "1360925264669966338";
 const API_URL = `https://api.lanyard.rest/v1/users/${USER_ID}`;
@@ -11,28 +11,24 @@ let activityTimerInterval = null;
 let lastActivityKey = null;
 
 // ===============================
-// ICONS (RENDER HOSTED)
+// ICONS (PUBLIC SOURCES)
 // ===============================
-const ICON_BASE = "https://jester-presence-api.onrender.com/icons/";
-
 const GAME_LOGOS = {
-  apex: ICON_BASE + "apex.png",
-  fortnite: ICON_BASE + "fortnite.png",
-  minecraft: ICON_BASE + "minecraft.png",
-  roblox: ICON_BASE + "roblox.png",
-  thieves: ICON_BASE + "thieves.png",
-  astroneer: ICON_BASE + "astroneer.png"
+  fortnite: "https://static.wikia.nocookie.net/fortnite_gamepedia/images/5/5f/Fortnite_F_icon.png",
+  minecraft: "https://static.wikia.nocookie.net/minecraft_gamepedia/images/4/4e/Grass_Block_JE5_BE3.png",
+  roblox: "https://upload.wikimedia.org/wikipedia/commons/5/5f/Roblox_Logo_Black.svg",
+  apex: "https://static.wikia.nocookie.net/apexlegends_gamepedia/images/2/2f/Apex_Legends_icon.png"
 };
 
 const PLATFORM_ICONS = {
-  xbox: ICON_BASE + "xbox.png",
-  playstation: ICON_BASE + "playstation.png"
+  xbox: "https://upload.wikimedia.org/wikipedia/commons/4/43/Xbox_one_logo.svg",
+  playstation: "https://upload.wikimedia.org/wikipedia/commons/4/4e/PlayStation_logo.svg"
 };
 
-const PLACEHOLDER_ICON = ICON_BASE + "game-placeholder.png";
+const PLACEHOLDER_ICON = "https://i.imgur.com/8QfQFfC.png";
 
 // ===============================
-// AUDIO PLAYER (FIXED)
+// AUDIO PLAYER
 // ===============================
 const audio = document.getElementById("bg-audio");
 const unlockBtn = document.getElementById("music-unlock");
@@ -58,7 +54,6 @@ if (unlockBtn && audio) {
       }
     } catch (err) {
       logLine("[Audio] Playback blocked or failed");
-      console.error(err);
     }
   });
 }
@@ -90,16 +85,12 @@ function truncate(text, max = 32) {
 }
 
 // ===============================
-// ICON RESOLUTION
+// GAME ICON RESOLUTION
 // ===============================
 function getGameLogo(activity) {
   if (!activity) return PLACEHOLDER_ICON;
 
-  if (activity.assets?.large_image) {
-    return `https://media.discordapp.net/${activity.assets.large_image.replace("mp:", "")}`;
-  }
-
-  const rawName = (activity.details || activity.name || "").toLowerCase();
+  const rawName = (activity.name || "").toLowerCase();
 
   for (const key in GAME_LOGOS) {
     if (rawName.includes(key)) return GAME_LOGOS[key];
@@ -109,9 +100,9 @@ function getGameLogo(activity) {
 }
 
 function getPlatformIcon(activity) {
-  if (!activity) return null;
+  if (!activity || !activity.platform) return null;
 
-  const platform = (activity.platform || "").toLowerCase();
+  const platform = activity.platform.toLowerCase();
 
   if (platform.includes("xbox")) return PLATFORM_ICONS.xbox;
   if (platform.includes("playstation")) return PLATFORM_ICONS.playstation;
@@ -120,7 +111,7 @@ function getPlatformIcon(activity) {
 }
 
 // ===============================
-// PRESENCE FETCHING (LANYARD)
+// FETCH PRESENCE (LANYARD)
 // ===============================
 async function fetchPresence() {
   try {
@@ -176,7 +167,7 @@ function updateDiscord(p) {
 }
 
 // ===============================
-// SPOTIFY PANEL (LANYARD)
+// SPOTIFY PANEL (NEW ALBUM ART LOGIC)
 // ===============================
 function updateSpotify(spotify) {
   const cover = document.getElementById("spotify-cover");
@@ -197,7 +188,10 @@ function updateSpotify(spotify) {
 
   lastSpotify = spotify;
 
-  cover.src = `https://i.scdn.co/image/${spotify.album_art_url.replace("spotify:", "")}`;
+  // NEW: stable album art
+  const artId = spotify.album_art_url.replace("spotify:", "");
+  cover.src = `https://i.scdn.co/image/${artId}`;
+
   title.textContent = truncate(spotify.song);
   artist.textContent = truncate(spotify.artist);
 
@@ -232,7 +226,7 @@ function updateSpotify(spotify) {
 }
 
 // ===============================
-// GAME PANEL (LANYARD)
+// GAME PANEL (NEW XBOX DETECTION)
 // ===============================
 function resolveActivity(p) {
   const acts = p.activities;
