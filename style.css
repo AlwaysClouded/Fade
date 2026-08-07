@@ -76,11 +76,60 @@ body {
 }
 
 .hero-crimson {
+  position: relative;
+  overflow: hidden;
   background: radial-gradient(circle at top left, #2b0009 0%, #050509 55%, #000000 100%);
   border-radius: 24px;
   padding: 24px 28px;
   border: 1px solid rgba(245, 196, 107, 0.18);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
+}
+
+/* VERTICAL PANELS */
+
+.vertical-panels {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 18px;
+  padding-right: 24px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.vertical-panels span {
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(192, 24, 60, 0.55) 20%,
+    rgba(245, 196, 107, 0.55) 50%,
+    rgba(192, 24, 60, 0.55) 80%,
+    transparent 100%
+  );
+  opacity: 0.5;
+  animation: panel-pulse 6s ease-in-out infinite;
+}
+
+.vertical-panels span:nth-child(2) {
+  animation-delay: 1.5s;
+}
+.vertical-panels span:nth-child(3) {
+  animation-delay: 3s;
+}
+
+@keyframes panel-pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.65; }
+}
+
+.hero-top,
+.hero-main,
+.hero-footer {
+  position: relative;
+  z-index: 1;
 }
 
 .hero-top {
