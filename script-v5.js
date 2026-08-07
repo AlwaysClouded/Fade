@@ -1,8 +1,8 @@
 // ===============================
-// CONFIG
+// CONFIG (LANYARD)
 // ===============================
 const USER_ID = "1360925264669966338";
-const API_URL = `https://jester-presence-api.onrender.com/api/presence?user=${USER_ID}&nocache=`;
+const API_URL = `https://api.lanyard.rest/v1/users/${USER_ID}`;
 
 // State trackers
 let lastSpotify = null;
@@ -40,13 +40,11 @@ const unlockBtn = document.getElementById("music-unlock");
 if (unlockBtn && audio) {
   unlockBtn.addEventListener("click", async () => {
     try {
-      // If audio file missing or failed to load
       if (!audio.src || audio.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
         logLine("[Audio] ERROR: Audio file missing or failed to load");
         return;
       }
 
-      // Toggle mute/play
       if (audio.paused || audio.muted) {
         audio.muted = false;
         await audio.play();
@@ -97,8 +95,8 @@ function truncate(text, max = 32) {
 function getGameLogo(activity) {
   if (!activity) return PLACEHOLDER_ICON;
 
-  if (activity.assets?.largeImage) {
-    return `https://media.discordapp.net/${activity.assets.largeImage.replace("mp:", "")}`;
+  if (activity.assets?.large_image) {
+    return `https://media.discordapp.net/${activity.assets.large_image.replace("mp:", "")}`;
   }
 
   const rawName = (activity.details || activity.name || "").toLowerCase();
@@ -122,29 +120,19 @@ function getPlatformIcon(activity) {
 }
 
 // ===============================
-// PRESENCE FETCHING
+// PRESENCE FETCHING (LANYARD)
 // ===============================
-async function fetchPresenceLazy() {
-  let res = await fetch(API_URL + Date.now(), { cache: "no-store" });
-  let json = await res.json();
-
-  if (!json.presence) {
-    logLine("[API] Waiting for worker...");
-    await new Promise(r => setTimeout(r, 1200));
-    res = await fetch(API_URL + Date.now(), { cache: "no-store" });
-    json = await res.json();
-  }
-
-  return json.presence || null;
-}
-
 async function fetchPresence() {
   try {
-    const p = await fetchPresenceLazy();
-    if (!p) {
-      logLine("[API] No presence data");
+    const res = await fetch(API_URL);
+    const json = await res.json();
+
+    if (!json.success) {
+      logLine("[API] Lanyard error");
       return;
     }
+
+    const p = json.data;
 
     updateDiscord(p);
     updateSpotify(p.spotify);
@@ -170,18 +158,25 @@ function updateDiscord(p) {
     offline: { color: "#747f8d", text: "Offline" }
   };
 
-  const s = statusMap[p.status] || statusMap.offline;
+  const s = statusMap[p.discord_status] || statusMap.offline;
 
   document.getElementById("dp-status-dot").style.background = s.color;
   document.getElementById("dp-status-text").textContent = s.text;
-  document.getElementById("dp-custom-status").textContent = p.customStatus || "No custom status";
 
-  if (p.avatar) document.getElementById("dp-avatar").src = p.avatar;
-  if (p.username) document.getElementById("dp-username").textContent = p.username;
+  const custom = p.activities.find(a => a.type === 4);
+  document.getElementById("dp-custom-status").textContent =
+    custom?.state || "No custom status";
+
+  const user = p.discord_user;
+  document.getElementById("dp-avatar").src =
+    `https://cdn.discordapp.com/avatars/${USER_ID}/${user.avatar}.png`;
+
+  document.getElementById("dp-username").textContent =
+    user.global_name || user.username;
 }
 
 // ===============================
-// SPOTIFY PANEL
+// SPOTIFY PANEL (LANYARD)
 // ===============================
 function updateSpotify(spotify) {
   const cover = document.getElementById("spotify-cover");
@@ -192,45 +187,22 @@ function updateSpotify(spotify) {
   const elapsedEl = document.getElementById("spotify-elapsed");
   const durationEl = document.getElementById("spotify-duration");
 
-  if (!spotify && lastSpotify) {
-    const now = Date.now();
-    const end = lastSpotify.timestamps?.end
-      ? new Date(lastSpotify.timestamps.end).getTime()
-      : null;
-
-    if (end && now < end) {
-      spotify = lastSpotify;
-    } else {
-      lastSpotify = null;
-      progressWrap.style.display = "none";
-      title.textContent = "Not playing anything";
-      artist.textContent = "";
-      cover.src = PLACEHOLDER_ICON;
-      return;
-    }
+  if (!spotify) {
+    title.textContent = "Not playing anything";
+    artist.textContent = "";
+    cover.src = PLACEHOLDER_ICON;
+    progressWrap.style.display = "none";
+    return;
   }
-
-  if (!spotify) return;
 
   lastSpotify = spotify;
 
-  const song = spotify.details || "";
-  const artistName = spotify.state || "";
-  const albumArt = spotify.assets?.largeImage
-    ? `https://i.scdn.co/image/${spotify.assets.largeImage.replace("spotify:", "")}`
-    : PLACEHOLDER_ICON;
+  cover.src = `https://i.scdn.co/image/${spotify.album_art_url.replace("spotify:", "")}`;
+  title.textContent = truncate(spotify.song);
+  artist.textContent = truncate(spotify.artist);
 
-  cover.src = albumArt;
-  title.textContent = truncate(song);
-  artist.textContent = truncate(artistName);
-
-  const start = spotify.timestamps?.start
-    ? new Date(spotify.timestamps.start).getTime()
-    : null;
-
-  const end = spotify.timestamps?.end
-    ? new Date(spotify.timestamps.end).getTime()
-    : null;
+  const start = spotify.timestamps.start;
+  const end = spotify.timestamps.end;
 
   if (!start || !end) {
     progressWrap.style.display = "none";
@@ -260,12 +232,19 @@ function updateSpotify(spotify) {
 }
 
 // ===============================
-// GAME PANEL
+// GAME PANEL (LANYARD)
 // ===============================
 function resolveActivity(p) {
-  if (p.xbox) return { ...p.xbox, platform: "Xbox" };
-  if (p.playstation) return { ...p.playstation, platform: "PlayStation" };
-  if (p.game) return p.game;
+  const acts = p.activities;
+
+  const xbox = acts.find(a => a.type === 0 && a.platform === "xbox");
+  const ps = acts.find(a => a.type === 0 && a.platform === "playstation");
+  const game = acts.find(a => a.type === 0);
+
+  if (xbox) return { ...xbox, platform: "Xbox" };
+  if (ps) return { ...ps, platform: "PlayStation" };
+  if (game) return game;
+
   return null;
 }
 
@@ -283,22 +262,14 @@ function updateGame(activity) {
     title.textContent = "Not playing";
     details.textContent = "";
     cover.src = PLACEHOLDER_ICON;
-
     icon.style.display = "none";
     platformPill.style.display = "none";
-
     timePlayed.textContent = "";
-    lastActivityKey = null;
-    if (activityTimerInterval) clearInterval(activityTimerInterval);
     return;
   }
 
-  const key = (activity.name || "") + (activity.details || "") + (activity.state || "");
-  if (key === lastActivityKey) return;
-  lastActivityKey = key;
-
-  title.textContent = activity.name || "Unknown game";
-  details.textContent = activity.details || activity.state || "";
+  title.textContent = activity.name;
+  details.textContent = activity.details || "";
 
   cover.src = getGameLogo(activity);
 
@@ -307,30 +278,24 @@ function updateGame(activity) {
   if (platformIcon) {
     icon.src = platformIcon;
     icon.style.display = "block";
-
     platformPill.style.display = "inline-block";
-    platformPill.style.backgroundImage = `url(${platformIcon})`;
-    platformPill.textContent = activity.platform || "";
+    platformPill.textContent = activity.platform;
   } else {
     icon.style.display = "none";
     platformPill.style.display = "none";
   }
 
-  if (activityTimerInterval) clearInterval(activityTimerInterval);
-
-  const start = activity.timestamps?.start
-    ? new Date(activity.timestamps.start).getTime()
-    : null;
+  const start = activity.timestamps?.start;
 
   if (start) {
+    if (activityTimerInterval) clearInterval(activityTimerInterval);
+
     activityTimerInterval = setInterval(() => {
       const diff = Date.now() - start;
       const mins = Math.floor(diff / 60000);
       const secs = Math.floor((diff % 60000) / 1000);
       timePlayed.textContent = `${mins}m ${secs}s`;
     }, 1000);
-  } else {
-    timePlayed.textContent = "";
   }
 
   panel.classList.add("active");
