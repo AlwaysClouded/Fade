@@ -26,6 +26,7 @@
         <span></span>
         <span></span>
         <span></span>
+        <span></span>
       </div>
 
       <header class="hero-top">
@@ -47,7 +48,7 @@
           <h2 class="hero-handle">@alwaysclouded</h2>
 
           <p class="hero-tagline">
-            Crimson lights, late queues, always clouded.
+            Apex Legends for life.
           </p>
 
           <div class="hero-actions">
@@ -81,56 +82,61 @@
           </div>
         </section>
 
-        <!-- SPOTIFY CARD -->
-        <section class="card card-spotify card-royale">
-          <header class="card-header">
-            <span class="card-label">SPOTIFY SESSION</span>
-          </header>
+        <!-- SPOTIFY + GAME ROW -->
+        <div class="sidebar-duo">
 
-          <div class="card-body spotify-body">
-            <div class="spotify-cover-wrap royale-cover">
-              <img id="spotify-cover" src="https://i.imgur.com/8QfQFfC.png" alt="Spotify Cover" />
-              <div class="spotify-glow royale-glow"></div>
-            </div>
+          <!-- SPOTIFY CARD -->
+          <section class="card card-spotify card-royale card-vertical">
+            <header class="card-header">
+              <span class="card-label">SPOTIFY</span>
+            </header>
 
-            <div class="spotify-meta">
-              <div id="spotify-title" class="spotify-title">Not playing anything</div>
-              <div id="spotify-artist" class="spotify-artist"></div>
+            <div class="card-body spotify-body">
+              <div class="spotify-cover-wrap royale-cover">
+                <img id="spotify-cover" src="https://i.imgur.com/8QfQFfC.png" alt="Spotify Cover" />
+                <div class="spotify-glow royale-glow"></div>
+              </div>
 
-              <div class="spotify-progress" style="display:none;">
-                <span id="spotify-elapsed">0:00</span>
-                <div class="spotify-bar">
-                  <div id="spotify-bar-fill"></div>
+              <div class="spotify-meta">
+                <div id="spotify-title" class="spotify-title">Not playing anything</div>
+                <div id="spotify-artist" class="spotify-artist"></div>
+
+                <div class="spotify-progress" style="display:none;">
+                  <span id="spotify-elapsed">0:00</span>
+                  <div class="spotify-bar">
+                    <div id="spotify-bar-fill"></div>
+                  </div>
+                  <span id="spotify-duration">0:00</span>
                 </div>
-                <span id="spotify-duration">0:00</span>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- GAME CARD -->
-        <section class="card card-game card-royale">
-          <header class="card-header">
-            <span class="card-label">GAME ACTIVITY</span>
-            <span id="game-platform" class="platform-pill" style="display:none;">APP</span>
-          </header>
+          <!-- GAME CARD -->
+          <section class="card card-game card-royale card-vertical">
+            <header class="card-header">
+              <span class="card-label">GAME</span>
+              <span id="game-platform" class="platform-pill" style="display:none;">APP</span>
+            </header>
 
-          <div class="card-body game-body">
-            <div class="game-cover-wrap royale-cover">
-              <img id="game-cover" src="https://i.imgur.com/8QfQFfC.png" alt="Game Cover" />
-            </div>
-
-            <div class="game-meta">
-              <div class="game-header">
-                <img id="game-icon" class="game-icon" src="" alt="Platform Icon" style="display:none;" />
-                <div id="game-title" class="game-title">Not playing</div>
+            <div class="card-body game-body">
+              <div class="game-cover-wrap royale-cover">
+                <img id="game-cover" src="https://i.imgur.com/8QfQFfC.png" alt="Game Cover" />
               </div>
 
-              <div id="game-details" class="game-details"></div>
-              <div id="game-time" class="game-time"></div>
+              <div class="game-meta">
+                <div class="game-header">
+                  <img id="game-icon" class="game-icon" src="" alt="Platform Icon" style="display:none;" />
+                  <div id="game-title" class="game-title">Not playing</div>
+                </div>
+
+                <div id="game-details" class="game-details"></div>
+                <div id="game-time" class="game-time"></div>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+
+        </div>
 
         <!-- LOG CARD -->
         <section class="card card-log card-royale">
