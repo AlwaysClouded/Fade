@@ -446,7 +446,7 @@ body {
 /* VERTICAL CARDS (SPOTIFY + GAME) */
 
 .card-vertical {
-  min-height: 300px;
+  min-height: 190px;
   display: flex;
   flex-direction: column;
 }
@@ -457,15 +457,15 @@ body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* SPOTIFY CARD */
 
 .spotify-cover-wrap {
   position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1;
+  width: 84px;
+  height: 84px;
   border-radius: 14px;
   overflow: hidden;
 }
@@ -545,8 +545,8 @@ body {
 /* GAME CARD */
 
 .game-cover-wrap {
-  width: 100%;
-  aspect-ratio: 1 / 1;
+  width: 84px;
+  height: 84px;
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid rgba(192, 24, 60, 0.6);
