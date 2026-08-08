@@ -86,13 +86,18 @@ body {
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
 }
 
-/* VERTICAL PANELS */
+/* VERTICAL PANELS — RIGHT SIDE ONLY */
 
 .vertical-panels {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  width: 42%;
+  height: 100%;
   pointer-events: none;
   z-index: 0;
+  -webkit-mask-image: linear-gradient(to left, black 60%, transparent 100%);
+  mask-image: linear-gradient(to left, black 60%, transparent 100%);
 }
 
 .vertical-panels span {
@@ -114,10 +119,10 @@ body {
   animation: panel-pulse 6s ease-in-out infinite;
 }
 
-.vertical-panels span:nth-child(1) { left: 18%; animation-delay: 0s; }
-.vertical-panels span:nth-child(2) { left: 46%; animation-delay: 1.5s; }
-.vertical-panels span:nth-child(3) { left: 74%; animation-delay: 3s; }
-.vertical-panels span:nth-child(4) { left: 92%; animation-delay: 2.2s; }
+.vertical-panels span:nth-child(1) { left: 8%;  animation-delay: 0s; }
+.vertical-panels span:nth-child(2) { left: 34%; animation-delay: 1.5s; }
+.vertical-panels span:nth-child(3) { left: 62%; animation-delay: 3s; }
+.vertical-panels span:nth-child(4) { left: 88%; animation-delay: 2.2s; }
 
 @keyframes panel-pulse {
   0%, 100% { opacity: 0.2; transform: scaleY(0.96); }
@@ -329,6 +334,21 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+}
+
+/* SPOTIFY + GAME ROW */
+
+.sidebar-duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .sidebar-duo {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* CARDS */
@@ -376,6 +396,22 @@ body {
   color: var(--text-muted);
 }
 
+/* DISCORD CARD — FIXED, STAYS LARGE */
+
+.card-discord {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-discord .card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
 /* STATUS DOT */
 
 .status-dot {
@@ -390,8 +426,6 @@ body {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.2); opacity: 0.75; }
 }
-
-/* DISCORD CARD */
 
 .discord-name {
   font-size: 16px;
@@ -409,18 +443,30 @@ body {
   color: var(--text-main);
 }
 
-/* SPOTIFY CARD */
+/* VERTICAL CARDS (SPOTIFY + GAME) */
 
-.spotify-body {
+.card-vertical {
+  min-height: 300px;
   display: flex;
+  flex-direction: column;
+}
+
+.card-vertical .card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: 12px;
 }
 
+/* SPOTIFY CARD */
+
 .spotify-cover-wrap {
   position: relative;
-  width: 72px;
-  height: 72px;
-  border-radius: 12px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
   overflow: hidden;
 }
 
@@ -458,7 +504,7 @@ body {
 }
 
 .spotify-meta {
-  flex: 1;
+  width: 100%;
 }
 
 .spotify-title {
@@ -476,7 +522,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 10px;
   font-size: 11px;
 }
 
@@ -498,15 +544,10 @@ body {
 
 /* GAME CARD */
 
-.game-body {
-  display: flex;
-  gap: 12px;
-}
-
 .game-cover-wrap {
-  width: 72px;
-  height: 72px;
-  border-radius: 12px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
   overflow: hidden;
   border: 1px solid rgba(192, 24, 60, 0.6);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.9);
@@ -521,12 +562,13 @@ body {
 }
 
 .game-meta {
-  flex: 1;
+  width: 100%;
 }
 
 .game-header {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
 }
 
