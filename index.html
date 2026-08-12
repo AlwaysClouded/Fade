@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Fade</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -43,6 +43,10 @@
 
 html, body {
   height: 100%;
+}
+
+html {
+  overflow-x: hidden;
 }
 
 body {
@@ -100,13 +104,14 @@ body {
   justify-content: center;
   perspective: 2100px;
   padding: 12px 64px;
+  padding: 12px 64px max(12px, env(safe-area-inset-bottom));
 }
 
 .scene-stage {
   transform-style: preserve-3d;
   will-change: transform;
   cursor: grab;
-  touch-action: none;
+  touch-action: pan-y;
   filter: drop-shadow(0 50px 70px rgba(0, 0, 0, 0.6));
 }
 
@@ -129,6 +134,7 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   box-shadow:
     6px 6px 14px rgba(0, 0, 0, 0.5),
     -5px -5px 14px var(--shadow-light),
@@ -142,6 +148,7 @@ body {
 }
 
 .scene-arrow:active {
+  transform: translateY(-50%) scale(0.94);
   box-shadow:
     inset 4px 4px 10px rgba(0, 0, 0, 0.7),
     inset -3px -3px 8px var(--shadow-light);
@@ -151,10 +158,28 @@ body {
 .scene-arrow-right { right: 24px; }
 
 @media (max-width: 900px) {
-  .scene-viewport { padding: 24px 56px; }
-  .scene-arrow { width: 38px; height: 38px; }
-  .scene-arrow-left { left: 8px; }
-  .scene-arrow-right { right: 8px; }
+  .scene-viewport {
+    perspective: 1500px;
+    padding: 18px 14px;
+    padding-top: max(18px, env(safe-area-inset-top));
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+  }
+  .scene-arrow {
+    width: 42px;
+    height: 42px;
+  }
+  .scene-arrow-left { left: 6px; }
+  .scene-arrow-right { right: 6px; }
+}
+
+@media (max-width: 480px) {
+  .scene-viewport { padding: 14px 8px; }
+  .scene-arrow {
+    width: 38px;
+    height: 38px;
+  }
+  .scene-arrow-left { left: 4px; }
+  .scene-arrow-right { right: 4px; }
 }
 
 .layout {
@@ -165,36 +190,46 @@ body {
   width: min(1900px, 97vw);
 }
 
+@media (max-width: 1100px) {
+  .layout {
+    gap: 32px;
+    padding: 44px 40px;
+  }
+}
+
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
-    padding: 28px 18px;
-    width: 92vw;
+    padding: 26px 16px;
+    width: 100%;
+    max-width: 720px;
+    gap: 22px;
   }
 
   .hero-crimson {
-    padding: 26px 22px;
+    padding: 24px 20px;
     min-height: auto;
     overflow: visible;
   }
 
   .hero-main {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
+    align-items: center;
+    text-align: center;
+    gap: 18px;
   }
 
   .avatar-orbit {
-    width: 140px;
-    height: 140px;
+    width: 150px;
+    height: 150px;
   }
 
   .royale-orbit .avatar-ring.inner {
-    inset: 16px;
+    inset: 17px;
   }
 
   .avatar-core {
-    inset: 28px;
+    inset: 30px;
   }
 
   .hero-orb {
@@ -202,19 +237,36 @@ body {
   }
 
   .hero-name {
-    font-size: 38px;
+    font-size: clamp(34px, 11vw, 52px);
     white-space: nowrap;
   }
 
   .hero-text {
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hero-tagline {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero-actions {
+    justify-content: center;
   }
 }
 
-@media (max-width: 380px) {
-  .hero-name {
-    font-size: 30px;
-  }
+@media (max-width: 480px) {
+  .layout { padding: 18px 10px; gap: 18px; }
+  .hero-crimson { padding: 20px 16px; }
+  .hero-name { font-size: clamp(30px, 13vw, 44px); }
+  .hero-handle { font-size: 15px; }
+  .hero-tagline { font-size: 15px; }
+  .avatar-orbit { width: 128px; height: 128px; }
+  .royale-orbit .avatar-ring.inner { inset: 15px; }
+  .avatar-core { inset: 26px; }
 }
 
 .hero {
@@ -307,6 +359,7 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  gap: 12px;
 }
 
 .brand-mark {
@@ -332,6 +385,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  -webkit-tap-highlight-color: transparent;
   box-shadow:
     5px 5px 12px rgba(0, 0, 0, 0.6),
     -4px -4px 10px var(--shadow-light);
@@ -424,9 +478,10 @@ body {
 }
 
 .hero-name {
-  font-size: 58px;
+  font-size: clamp(38px, 5.2vw, 58px);
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  line-height: 1;
 }
 
 .hero-name-royale {
@@ -437,14 +492,14 @@ body {
 }
 
 .hero-handle {
-  font-size: 19px;
+  font-size: clamp(16px, 1.6vw, 19px);
   color: var(--text-muted);
   margin-top: 6px;
 }
 
 .hero-tagline {
   margin-top: 22px;
-  font-size: 17px;
+  font-size: clamp(15px, 1.4vw, 17px);
   color: var(--text-main);
   max-width: 480px;
 }
@@ -467,7 +522,9 @@ body {
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 9px;
+  -webkit-tap-highlight-color: transparent;
   transition: transform 0.15s ease, filter 0.2s ease;
 }
 
@@ -480,6 +537,11 @@ body {
 .btn-royale:hover {
   filter: brightness(1.08);
   transform: translateY(-2px);
+}
+
+.btn-royale:active {
+  transform: translateY(0);
+  filter: brightness(0.96);
 }
 
 .btn-outline {
@@ -534,6 +596,7 @@ body {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   animation: card-glow 6s ease-in-out infinite;
   backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .card:hover {
@@ -556,6 +619,7 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 14px;
+  gap: 8px;
 }
 
 .card-label {
@@ -566,6 +630,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .card-label .icon {
@@ -600,8 +665,9 @@ body {
 }
 
 .discord-name {
-  font-size: 22px;
+  font-size: clamp(18px, 1.8vw, 22px);
   font-weight: 600;
+  word-break: break-word;
 }
 
 .discord-status {
@@ -628,6 +694,7 @@ body {
   align-items: center;
   text-align: left;
   gap: 18px;
+  min-width: 0;
 }
 
 .spotify-cover-wrap {
@@ -821,6 +888,75 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ===============================
+   RESPONSIVE — CARDS & SIDEBAR
+   Keep the 3D card depth, shrink
+   paddings/covers for small screens.
+   =============================== */
+@media (max-width: 900px) {
+  .sidebar-royale .sidebar-shell { gap: 16px; }
+
+  .card { padding: 18px 18px; }
+
+  .card-discord { min-height: 150px; }
+  .card-vertical { min-height: 0; }
+
+  .spotify-cover-wrap,
+  .game-cover-wrap {
+    width: 88px;
+    height: 88px;
+    border-radius: 14px;
+  }
+
+  .card-vertical .card-body { gap: 14px; }
+
+  .spotify-title,
+  .game-title { font-size: 16px; }
+  .spotify-artist,
+  .game-details { font-size: 14px; }
+
+  .log-body { max-height: 120px; }
+}
+
+@media (max-width: 480px) {
+  .card { padding: 16px 14px; border-radius: 18px; }
+  .sidebar-royale .sidebar-shell { gap: 14px; }
+
+  /* Stack cover above meta on very small screens for breathing room */
+  .card-vertical .card-body {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .spotify-cover-wrap,
+  .game-cover-wrap {
+    width: 100%;
+    height: 0;
+    padding-bottom: 100%;
+    border-radius: 16px;
+  }
+
+  .spotify-cover-wrap img,
+  .game-cover-wrap img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .spotify-progress { margin-top: 10px; }
+
+  .log-output { font-size: 12px; }
+}
+
+/* Touch device niceties: drop hover lifts that cause flicker on tap */
+@media (hover: none) {
+  .card:hover { transform: none; }
+  .btn-ghost:hover { transform: none; }
+  .btn-royale:hover { transform: none; }
+}
+
   </style>
 </head>
 
@@ -933,7 +1069,7 @@ body {
           </div>
 
           <footer class="hero-footer hero-footer-royale">
-            <span>Fade â€¢ AlwaysClouded â€¢ 2026</span>
+            <span>Fade • AlwaysClouded • 2026</span>
           </footer>
 
         </section>
@@ -1078,23 +1214,41 @@ body {
       var rotY = 0;
       var zoomed = false;
       var holding = false;
+      var dragging = false;
       var pointerDownAt = 0;
       var pointerMoved = false;
       var startX = 0, startY = 0;
+      var lastX = 0;
       var HOLD_THRESHOLD = 280;
       var MOVE_TOLERANCE = 12;
       var holdTimer = null;
 
-      function render() {
-        var tilt = zoomed || holding ? 22 : 40;
-        var scale = zoomed || holding ? 1.06 : 0.94;
-        var duration = holding ? 0.5 : 0.85;
+      // Responsive 3D profile — keep the 3D-2D look but keep text readable on small screens.
+      function profile() {
+        var w = window.innerWidth;
+        if (w <= 480) {
+          return { tilt: 10, tiltZoom: 6, scale: 1, scaleZoom: 1.03 };
+        }
+        if (w <= 900) {
+          return { tilt: 16, tiltZoom: 10, scale: 1, scaleZoom: 1.04 };
+        }
+        return { tilt: 40, tiltZoom: 22, scale: 0.94, scaleZoom: 1.06 };
+      }
+
+      function render(instant) {
+        var p = profile();
+        var tilt = (zoomed || holding) ? p.tiltZoom : p.tilt;
+        var scale = (zoomed || holding) ? p.scaleZoom : p.scale;
+        var duration = (instant || dragging) ? 0 : (holding ? 0.5 : 0.85);
         stage.style.transition = 'transform ' + duration + 's cubic-bezier(.32,.9,.24,1)';
         stage.style.transform =
           'rotateX(' + tilt + 'deg) rotateY(' + rotY + 'deg) scale(' + scale + ')';
       }
 
-      render();
+      render(true);
+
+      // Keep tilt in sync when the viewport size changes (e.g. device rotation).
+      window.addEventListener('resize', function () { render(); });
 
       function isInteractive(el) {
         return !!el.closest('a, button, input, textarea, select, .scene-arrow');
@@ -1104,12 +1258,16 @@ body {
         if (isInteractive(e.target)) return;
         pointerDownAt = Date.now();
         pointerMoved = false;
+        dragging = false;
         startX = e.clientX;
         startY = e.clientY;
+        lastX = e.clientX;
 
         holdTimer = setTimeout(function () {
-          holding = true;
-          render();
+          if (!pointerMoved) {
+            holding = true;
+            render();
+          }
         }, HOLD_THRESHOLD);
       });
 
@@ -1117,20 +1275,33 @@ body {
         if (Math.abs(e.clientX - startX) > MOVE_TOLERANCE || Math.abs(e.clientY - startY) > MOVE_TOLERANCE) {
           pointerMoved = true;
         }
+
+        // Horizontal drag rotates the stage in 3D — natural on touch + mouse.
+        if (pointerMoved && !holding) {
+          if (!dragging) {
+            dragging = true;
+            clearTimeout(holdTimer);
+          }
+          var dx = e.clientX - lastX;
+          rotY += dx * 0.35;
+          lastX = e.clientX;
+          render(true);
+        }
       });
 
       function endPress(e) {
         clearTimeout(holdTimer);
-        if (isInteractive(e.target) && !holding) return;
+        if (isInteractive(e.target) && !holding && !dragging) return;
 
         var wasHolding = holding;
         holding = false;
 
         if (wasHolding) {
           zoomed = false;
-        } else if (!pointerMoved && Date.now() - pointerDownAt < HOLD_THRESHOLD + 40) {
+        } else if (!pointerMoved && !dragging && Date.now() - pointerDownAt < HOLD_THRESHOLD + 40) {
           zoomed = !zoomed;
         }
+        dragging = false;
         render();
       }
 
@@ -1139,12 +1310,14 @@ body {
         clearTimeout(holdTimer);
         holding = false;
         zoomed = false;
+        dragging = false;
         render();
       });
       viewport.addEventListener('pointerleave', function (e) {
-        if (holding) {
+        if (holding || dragging) {
           clearTimeout(holdTimer);
           holding = false;
+          dragging = false;
           zoomed = false;
           render();
         }
