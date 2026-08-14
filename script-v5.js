@@ -1,58 +1,20 @@
-// ===============================
-// CONFIG (LANYARD ONLY)
+==============================
+// CONFIG
 // ===============================
 const USER_ID = "1360925264669966338";
-const API_URL = `https://api.lanyard.rest/v1/users/${USER_ID}`;
+const WS_URL = "wss://identities-presence.onrender.com/socket";
+const REST_URL = `https://identities-presence.onrender.com/v1/users/${USER_ID}`;
 
-// State trackers
-let lastSpotify = null;
+// Track last states
+let lastTrackId = null;
 let spotifyInterval = null;
-let activityTimerInterval = null;
-let lastActivityKey = null;
+let ws = null;
+let heartbeatTimer = null;
+let reconnectTimer = null;
+let didConnect = false;
 
 // ===============================
-// ICONS (PUBLIC SOURCES)
-// ===============================
-const PLATFORM_ICONS = {
-  xbox: "https://upload.wikimedia.org/wikipedia/commons/4/43/Xbox_one_logo.svg",
-  playstation: "https://upload.wikimedia.org/wikipedia/commons/4/4e/PlayStation_logo.svg"
-};
-
-const PLACEHOLDER_ICON = "https://i.imgur.com/8QfQFfC.png";
-
-// ===============================
-// AUDIO PLAYER
-// ===============================
-const audio = document.getElementById("bg-audio");
-const unlockBtn = document.getElementById("music-unlock");
-
-if (unlockBtn && audio) {
-  unlockBtn.addEventListener("click", async () => {
-    try {
-      if (!audio.src || audio.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
-        logLine("[Audio] ERROR: Audio file missing or failed to load");
-        return;
-      }
-
-      if (audio.paused || audio.muted) {
-        audio.muted = false;
-        await audio.play();
-        unlockBtn.textContent = "MUTE TRACK";
-        logLine("[Audio] Track unmuted + playing");
-      } else {
-        audio.muted = true;
-        audio.pause();
-        unlockBtn.textContent = "UNMUTE TRACK";
-        logLine("[Audio] Track muted + paused");
-      }
-    } catch (err) {
-      logLine("[Audio] Playback blocked or failed");
-    }
-  });
-}
-
-// ===============================
-// HELPERS
+// LOGGING
 // ===============================
 function logLine(text) {
   const log = document.getElementById("log-output");
@@ -63,9 +25,160 @@ function logLine(text) {
   span.textContent = text;
 
   log.appendChild(span);
-  while (log.children.length > 5) log.removeChild(log.firstChild);
+  while (log.children.length > 6) log.removeChild(log.firstChild);
 }
 
+// ===============================
+// PRESENCE (WebSocket + REST fallback)
+// ===============================
+const OPCODE = { HELLO: 1, INIT: 2, HEARTBEAT: 3, DISPATCH: 0 };
+
+function handlePresence(data) {
+  if (!data) {
+    logLine("[API] No presence data");
+    return;
+  }
+  updatePresence(data);
+  updateSpotify(data.spotify);
+  logLine("[API] Presence updated");
+}
+
+function connectWebSocket() {
+  if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+
+  try {
+    ws = new WebSocket(WS_URL);
+  } catch (err) {
+    logLine("[WS] Connect failed");
+    scheduleReconnect();
+    return;
+  }
+
+  ws.onopen = () => {
+    didConnect = true;
+    logLine("[WS] Connected");
+  };
+
+  ws.onmessage = (event) => {
+    let msg;
+    try { msg = JSON.parse(event.data); } catch { return; }
+
+    switch (msg.op) {
+      case OPCODE.HELLO: {
+        const interval = msg.d?.heartbeat_interval ?? 30000;
+        startHeartbeat(interval);
+        ws.send(JSON.stringify({ op: OPCODE.INIT, d: { subscribe_to_id: USER_ID } }));
+        break;
+      }
+      case OPCODE.DISPATCH: {
+        const presence = msg.d?.[USER_ID];
+        if (presence) handlePresence(presence);
+        break;
+      }
+      default:
+        break;
+    }
+  };
+
+  ws.onerror = () => logLine("[WS] Error");
+  ws.onclose = () => {
+    stopHeartbeat();
+    logLine("[WS] Disconnected");
+    scheduleReconnect();
+  };
+}
+
+function startHeartbeat(interval) {
+  stopHeartbeat();
+  heartbeatTimer = setInterval(() => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ op: OPCODE.HEARTBEAT }));
+    }
+  }, interval);
+}
+
+function stopHeartbeat() {
+  if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+}
+
+function scheduleReconnect() {
+  if (reconnectTimer) return;
+  const delay = didConnect ? 5000 : 15000;
+  logLine(`[WS] Reconnecting in ${delay / 1000}s`);
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    connectWebSocket();
+  }, delay);
+}
+
+async function fetchPresenceREST() {
+  try {
+    const res = await fetch(REST_URL, { cache: "no-store" });
+    const json = await res.json();
+    handlePresence(json?.data);
+  } catch (err) {
+    logLine("[API] Fetch error");
+  }
+}
+
+connectWebSocket();
+// REST fallback: initial snapshot and periodic refresh if the socket is not open
+fetchPresenceREST();
+setInterval(() => {
+  if (!ws || ws.readyState !== WebSocket.OPEN) fetchPresenceREST();
+}, 5000);
+
+// ===============================
+// PRESENCE PANEL
+// ===============================
+function updatePresence(p) {
+  const statusMap = {
+    online: { color: "#a8bfa1", text: "Online" },
+    idle: { color: "#e7a8b8", text: "Idle" },
+    dnd: { color: "#f04747", text: "Do Not Disturb" },
+    offline: { color: "#747f8d", text: "Offline" }
+  };
+
+  const status = p.discord_status || p.status || "offline";
+  const s = statusMap[status] || statusMap.offline;
+
+  const customStatus =
+    (Array.isArray(p.activities) &&
+      p.activities.find(a => a.type === 4)?.state) ||
+    p.customStatus ||
+    null;
+
+  const user = p.discord_user || {};
+  const avatarHash = user.avatar;
+  const ext = avatarHash && avatarHash.startsWith("a_") ? "gif" : "png";
+  const avatarUrl = avatarHash
+    ? `https://cdn.discordapp.com/avatars/${user.id}/${avatarHash}.${ext}?size=256`
+    : null;
+  const displayName = user.global_name || user.username || p.username || "User";
+
+  const dot = document.getElementById("dp-status-dot");
+  const text = document.getElementById("dp-status-text");
+  const custom = document.getElementById("dp-custom-status");
+  const avatar = document.getElementById("dp-avatar");
+  const username = document.getElementById("dp-username");
+  const handle = document.getElementById("hero-handle");
+
+  if (dot) {
+    dot.style.background = s.color;
+    dot.style.boxShadow = `0 0 8px ${s.color}`;
+  }
+
+  if (text) text.textContent = s.text;
+  if (custom) custom.textContent = customStatus || "No custom status";
+
+  if (avatar && avatarUrl) avatar.src = avatarUrl;
+  if (username) username.textContent = displayName;
+  if (handle) handle.textContent = `@${user.username || displayName}`;
+}
+
+// ===============================
+// SPOTIFY PANEL
+// ===============================
 function formatTime(ms) {
   const total = Math.floor(ms / 1000);
   const m = Math.floor(total / 60);
@@ -77,128 +190,55 @@ function truncate(text, max = 32) {
   return text && text.length > max ? text.slice(0, max) + "…" : text || "";
 }
 
-// ===============================
-// ACTIVITY ARTWORK RESOLUTION (REAL DISCORD ASSETS)
-// ===============================
-function getActivityImage(activity) {
-  const img = activity?.assets?.large_image;
-  if (!img) return PLACEHOLDER_ICON;
-
-  // External art (used by many rich-presence integrations, e.g. Spotify embeds via Discord)
-  if (img.startsWith("mp:external/")) {
-    return `https://media.discordapp.net/external/${img.replace("mp:external/", "")}`;
-  }
-
-  // Spotify-style asset key
-  if (img.startsWith("spotify:")) {
-    return `https://i.scdn.co/image/${img.replace("spotify:", "")}`;
-  }
-
-  // App-uploaded asset, keyed by application_id
-  if (activity.application_id) {
-    return `https://cdn.discordapp.com/app-assets/${activity.application_id}/${img}.png`;
-  }
-
-  return PLACEHOLDER_ICON;
-}
-
-function getPlatformIcon(activity) {
-  if (!activity || !activity.platform) return null;
-
-  const platform = activity.platform.toLowerCase();
-
-  if (platform.includes("xbox")) return PLATFORM_ICONS.xbox;
-  if (platform.includes("playstation")) return PLATFORM_ICONS.playstation;
-
-  return null;
-}
-
-// ===============================
-// FETCH PRESENCE (LANYARD)
-// ===============================
-async function fetchPresence() {
-  try {
-    const res = await fetch(API_URL);
-    const json = await res.json();
-
-    if (!json.success) {
-      logLine("[API] Lanyard error");
-      return;
-    }
-
-    const p = json.data;
-
-    updateDiscord(p);
-    updateSpotify(p.spotify);
-    updateGame(resolveActivity(p));
-
-    logLine("[API] Presence updated");
-  } catch (err) {
-    logLine("[API] Fetch error");
-  }
-}
-
-setInterval(fetchPresence, 2000);
-fetchPresence();
-
-// ===============================
-// DISCORD PANEL
-// ===============================
-function updateDiscord(p) {
-  const statusMap = {
-    online: { color: "#43b581", text: "Online" },
-    idle: { color: "#faa61a", text: "Idle" },
-    dnd: { color: "#f04747", text: "Do Not Disturb" },
-    offline: { color: "#747f8d", text: "Offline" }
-  };
-
-  const s = statusMap[p.discord_status] || statusMap.offline;
-
-  document.getElementById("dp-status-dot").style.background = s.color;
-  document.getElementById("dp-status-text").textContent = s.text;
-
-  const custom = p.activities.find(a => a.type === 4);
-  document.getElementById("dp-custom-status").textContent =
-    custom?.state || "No custom status";
-
-  const user = p.discord_user;
-  document.getElementById("dp-avatar").src =
-    `https://cdn.discordapp.com/avatars/${USER_ID}/${user.avatar}.png`;
-
-  document.getElementById("dp-username").textContent =
-    user.global_name || user.username;
-}
-
-// ===============================
-// SPOTIFY PANEL (FIXED ALBUM ART LOGIC)
-// ===============================
 function updateSpotify(spotify) {
   const cover = document.getElementById("spotify-cover");
   const title = document.getElementById("spotify-title");
   const artist = document.getElementById("spotify-artist");
-  const progressWrap = document.querySelector(".spotify-progress");
-  const barFill = document.getElementById("spotify-bar-fill");
+  const panel = document.querySelector(".card-spotify");
+
   const elapsedEl = document.getElementById("spotify-elapsed");
   const durationEl = document.getElementById("spotify-duration");
+  const barFill = document.getElementById("spotify-bar-fill");
+  const progressWrap = document.querySelector(".spotify-progress");
+
+  if (!cover || !title || !artist || !panel || !elapsedEl || !durationEl || !barFill || !progressWrap) return;
 
   if (!spotify) {
+    panel.classList.remove("active");
+    if (spotifyInterval) clearInterval(spotifyInterval);
+
+    cover.src = "https://i.imgur.com/8QfQFfC.png";
     title.textContent = "Not playing anything";
     artist.textContent = "";
-    cover.src = PLACEHOLDER_ICON;
+
     progressWrap.style.display = "none";
+    lastTrackId = null;
+    logLine("[Spotify] Idle");
     return;
   }
 
-  lastSpotify = spotify;
+  const song = spotify.song || spotify.details || "";
+  const artistName = spotify.artist || spotify.state || "";
+  const albumArt = spotify.album_art_url
+    || (spotify.assets?.largeImage
+      ? `https://i.scdn.co/image/${spotify.assets.largeImage.replace("spotify:", "")}`
+      : "https://i.imgur.com/8QfQFfC.png");
 
-  // Lanyard already provides a complete, ready-to-use image URL
-  cover.src = spotify.album_art_url || PLACEHOLDER_ICON;
+  const trackId = song + artistName;
 
-  title.textContent = truncate(spotify.song);
-  artist.textContent = truncate(spotify.artist);
+  if (trackId !== lastTrackId) {
+    cover.src = albumArt;
+    title.textContent = truncate(song, 32);
+    artist.textContent = truncate(artistName, 32);
+    panel.classList.add("active");
+    lastTrackId = trackId;
+    logLine(`[Spotify] ${song} — ${artistName}`);
+  }
 
-  const start = spotify.timestamps.start;
-  const end = spotify.timestamps.end;
+  if (spotifyInterval) clearInterval(spotifyInterval);
+
+  const start = spotify.timestamps?.start ? Number(spotify.timestamps.start) : null;
+  const end = spotify.timestamps?.end ? Number(spotify.timestamps.end) : null;
 
   if (!start || !end) {
     progressWrap.style.display = "none";
@@ -210,89 +250,42 @@ function updateSpotify(spotify) {
   const duration = end - start;
   durationEl.textContent = formatTime(duration);
 
-  if (spotifyInterval) clearInterval(spotifyInterval);
-
   spotifyInterval = setInterval(() => {
     const now = Date.now();
     const elapsed = now - start;
     const clamped = Math.max(0, Math.min(duration, elapsed));
 
     elapsedEl.textContent = formatTime(clamped);
-    barFill.style.width = `${(clamped / duration) * 100}%`;
 
-    if (now >= end) {
-      lastSpotify = null;
-      clearInterval(spotifyInterval);
-    }
+    const progress = Math.min(1, clamped / duration);
+    barFill.style.width = `${progress * 100}%`;
   }, 1000);
 }
 
 // ===============================
-// GAME PANEL (REAL ARTWORK + XBOX/PLAYSTATION DETECTION)
+// MUSIC TOGGLE + COPY LINK
 // ===============================
-function resolveActivity(p) {
-  const acts = p.activities;
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("music-unlock");
+  const audio = document.getElementById("bg-audio");
 
-  const xbox = acts.find(a => a.type === 0 && a.platform === "xbox");
-  const ps = acts.find(a => a.type === 0 && a.platform === "playstation");
-  const game = acts.find(a => a.type === 0);
+  if (audio) audio.muted = true;
 
-  if (xbox) return { ...xbox, platform: "Xbox" };
-  if (ps) return { ...ps, platform: "PlayStation" };
-  if (game) return game;
-
-  return null;
-}
-
-function updateGame(activity) {
-  const cover = document.getElementById("game-cover");
-  const icon = document.getElementById("game-icon");
-  const title = document.getElementById("game-title");
-  const details = document.getElementById("game-details");
-  const timePlayed = document.getElementById("game-time");
-  const platformPill = document.getElementById("game-platform");
-  const panel = document.querySelector(".card-game");
-
-  if (!activity) {
-    panel.classList.remove("active");
-    title.textContent = "Not playing";
-    details.textContent = "";
-    cover.src = PLACEHOLDER_ICON;
-    icon.style.display = "none";
-    platformPill.style.display = "none";
-    timePlayed.textContent = "";
-    return;
+  if (btn && audio) {
+    btn.addEventListener("click", async () => {
+      try {
+        if (audio.paused || audio.muted) {
+          audio.muted = false;
+          await audio.play();
+          btn.textContent = "MUTE TRACK";
+        } else {
+          audio.pause();
+          audio.muted = true;
+          btn.textContent = "UNMUTE TRACK";
+        }
+      } catch (err) {
+        console.error("[Audio] Play blocked:", err);
+      }
+    });
   }
-
-  title.textContent = activity.name;
-  details.textContent = activity.details || "";
-
-  cover.src = getActivityImage(activity);
-
-  const platformIcon = getPlatformIcon(activity);
-
-  if (platformIcon) {
-    icon.src = platformIcon;
-    icon.style.display = "block";
-    platformPill.style.display = "inline-block";
-    platformPill.textContent = activity.platform;
-  } else {
-    icon.style.display = "none";
-    platformPill.style.display = "none";
-  }
-
-  const start = activity.timestamps?.start;
-
-  if (start) {
-    if (activityTimerInterval) clearInterval(activityTimerInterval);
-
-    activityTimerInterval = setInterval(() => {
-      const diff = Date.now() - start;
-      const mins = Math.floor(diff / 60000);
-      const secs = Math.floor((diff % 60000) / 1000);
-      timePlayed.textContent = `${mins}m ${secs}s`;
-    }, 1000);
-  }
-
-  panel.classList.add("active");
-}
+});
